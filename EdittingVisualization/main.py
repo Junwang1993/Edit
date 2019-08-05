@@ -48,9 +48,9 @@ length = 1680.0
 width = 1050.0
 fileDirs, fileMarks = getAllFile([1]) # only extract college data
 # iterate all task
-for i in range(0, len(fileDirs)):
+for i_file in range(0, len(fileDirs)):
     #print(str(i))
-    dir = fileDirs[i]
+    dir = fileDirs[i_file]
     # get csv file
     csv1 = CsvReader.CsvReader(glob(dir + '*gaze*.csv')[0])
     csv2 = CsvReader.CsvReader(glob(dir + 'window*.csv')[0])
@@ -73,6 +73,7 @@ for i in range(0, len(fileDirs)):
     start_v, end_v, data_gaze_videoTimeDomain = ConvertTimeDomainToVideo.ConvertTimeDomainToVideo().convertTimeDomain2Video(time_other=at_gaze, time_vidoe=at_video, collections_data=data_gaze[1:len(data_gaze)])
     if end_v == -1:
         end_v = len(data_video[0]) - 1
+    full_gaze_at, full_gaze_data = ConvertTimeDomainToVideo.ConvertTimeDomainToVideo().InsertInterpolateListBack(at_video[start_v:end_v],at_gaze,data_gaze_videoTimeDomain,data_gaze[1:len(data_gaze)])
 
     # get cursor position info
     csv3 = CsvReader.CsvReader(glob(dir + '*cursor*.csv')[0])
@@ -87,6 +88,16 @@ for i in range(0, len(fileDirs)):
     cap.set(1, start_v)
     # editting module
     EdittingModule = Editting.EditingModule(ats_cursor, xs_cursor, ys_cursor)
+    # get all insertions time window
+    allInsertionTMs = EdittingModule.getAllInertionTimeWindow(dt_front=250, dt_back=250)
+    # iterate all insertion time window
+    lastIndex_video = 0
+    for i_itw in range(0, len(allInsertionTMs)):
+        TM_at = allInsertionTMs[i_itw]
+        #
+        video_index_range = (Time.Time().findPositionInTimeArray(TM_at[0], at_video, lastIndex_video),
+                             Time.Time().findPositionInTimeArray(TM_at[1], at_video, lastIndex_video))
+        lastIndex_video = video_index_range[-1] # update lastfound index
 
 
 
@@ -96,12 +107,12 @@ for i in range(0, len(fileDirs)):
 
 
     # iterate cap
-    for i in range(start_v, end_v + 1):
+    for i_v in range(start_v, end_v + 1):
         _, frame = cap.read()
         # get gaze info
-        at_gaze = at_video[i]
-        x = length * data_gaze_videoTimeDomain[0][i-start_v]
-        y = width * data_gaze_videoTimeDomain[1][i-start_v]
+        at_gaze = at_video[i_v]
+        x = length * data_gaze_videoTimeDomain[0][i_v - start_v]
+        y = width * data_gaze_videoTimeDomain[1][i_v - start_v]
         # get cursor info
         cursor_p_tuple = getCursorPosition(at_gaze, ats_cursor, xs_cursor, ys_cursor)
         # plot gaze

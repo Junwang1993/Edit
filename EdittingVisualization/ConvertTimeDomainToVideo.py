@@ -35,5 +35,76 @@ class ConvertTimeDomainToVideo(object):
             endIndex = 0
         return startIndex+1, endIndex-1, collections_data_converted
 
+    @staticmethod
+    def InsertInterpolateListBack(insert_ats, full_ats, insertData, fullData):
+        # insert is video at
+        # full is gaze at
+        refine_ats = []
+        refine_data = []
+        for i in range(0, len(insertData)):
+            refine_data.insert([])
+        # two index
+        i_insert = 0
+        i_full = 0
+        while True:
+            if i_insert == -1 and i_full == -1:
+                # ending point
+                break
+            else:
+                if i_insert>=0 and i_full>=0:
+                    at_insert = insert_ats[i_insert]
+                    at_full = full_ats[i_full]
+                    # compare who is larger
+                    flag = Time.Time.compareTwoTsime(at_insert, at_full)
+                    if flag <0:
+                        # at_insert is less
+                        refine_ats.append(at_insert)
+                        for i_d in range(0, len(insertData)):
+                            refine_data[i_d].append(insertData[i_d][i_insert])
+                        # update
+                        i_insert+=1
+                        if i_insert>=len(insert_ats):
+                            i_insert = -1
+
+                    elif flag == 0:
+                        # both equal
+                        refine_ats.append(at_insert)
+                        for i_d in range(0, len(insertData)):
+                            refine_data[i_d].append(insertData[i_d][i_insert])
+                        # update
+                        i_insert+=1
+                        if i_insert>=len(insert_ats):
+                            i_insert = -1
+                        i_full +=1
+                        if i_full>=len(full_ats):
+                            i_full =-1
+
+                    else:
+                        # at_full is less
+                        refine_ats.append(at_full)
+                        for i_d in range(0, len(insertData)):
+                            refine_data[i_d].append(fullData[i_d][i_full])
+                        # update
+                        i_full+=1
+                        if i_full>=len(full_ats):
+                            i_full =-1
+                elif i_insert>=0:
+                    refine_ats.append(at_insert)
+                    for i_d in range(0, len(insertData)):
+                        refine_data[i_d].append(insertData[i_d][i_insert])
+                    # update
+                    i_insert += 1
+                    if i_insert >= len(insert_ats):
+                        i_insert = -1
+                else:
+                    refine_ats.append(at_full)
+                    for i_d in range(0, len(insertData)):
+                        refine_data[i_d].append(fullData[i_d][i_full])
+                    # update
+                    i_full += 1
+                    if i_full >= len(full_ats):
+                        i_full  =-1
+
+        return refine_ats, refine_data
 
 

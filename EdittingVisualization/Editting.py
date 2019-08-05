@@ -1,4 +1,5 @@
 import numpy as np
+import Time
 # static method
 
 class EditingModule():
@@ -33,5 +34,15 @@ class EditingModule():
             if insert_flag == True:
                 self.insertion_at_list.append(self.ats_cursor[i])
 
+    def getInsertAtList(self):
+        return self.insertion_at_list
 
+    def getAllInertionTimeWindow(self, dt_front, dt_back):
+        # return a at tuple list
+        insertion_time_window_list = []
+        for at in self.insertion_at_list:
+            # generate time window
+            tm = (Time.Time().substractByNms(dt_front), Time.Time().addByNms(dt_back))
+            insertion_time_window_list.append(tm)
+        return insertion_time_window_list
 
