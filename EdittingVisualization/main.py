@@ -41,6 +41,23 @@ def getCursorPosition(at_wanted, ats_cursor, xs_cursor, ys_cursor, length = 1680
     cursor_p = (xs_cursor[i], ys_cursor[i])
     return cursor_p
 
+def getKeyboardInfoInGivenAtInterval(at_interval, ats, info_types, keypressInfo):
+    f_at = at_interval[0]
+    b_at = at_interval[1]
+    # determine the range in keyboard info list
+    f_index = Time.Time().findPositionInTimeArray(f_at, ats)-1
+    b_index = Time.Time().findPositionInTimeArray(b_at, ats)-1
+    # return info
+    refine_ats = []
+    refine_keypresses = []
+    for i in range(f_index, b_index+1):
+        # checking type
+        type = info_types[i]
+        if type == 'KeyboardDown':
+            refine_ats.append(ats[i])
+            refine_keypresses.append(keypressInfo[i])
+    return refine_ats, refine_keypresses
+
 
 
 
@@ -82,7 +99,12 @@ for i_file in range(0, len(fileDirs)):
     ats_cursor = [Time.Time(at) for at in data_cursor[0]]
     xs_cursor = [float(x) for x in data_cursor[1]]
     ys_cursor = [float(y) for y in data_cursor[2]]
-    # convert at of cursor to rt of cursor
+    # read keyboard info
+    csv4 = CsvReader.CsvReader(glob(dir + '*mouse*.csv')[0])
+    data_keyboard = csv4.getData([0, 2, 3], hasHeader=1, needHandleNegativeOneIndex=[], flag=True)
+    ats_cursor = [Time.Time(at) for at in data_keyboard[0]]
+    info_types = data_keyboard[1]
+    keypressInfo = data_keyboard[2]
     # read video
     cap = cv2.VideoCapture(glob(dir + 'window*.avi')[0])
     # setting start point
