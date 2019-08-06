@@ -6,6 +6,7 @@ import CsvReader
 import ConvertTimeDomainToVideo
 import DataPreprocessing
 import Editting
+import Visualization
 # functions
 def getAllFile(age_wanted):
     fileDirs = []
@@ -89,48 +90,24 @@ for i_file in range(0, len(fileDirs)):
     # editting module
     EdittingModule = Editting.EditingModule(ats_cursor, xs_cursor, ys_cursor)
     # get all insertions time window
-    allInsertionTMs = EdittingModule.getAllInertionTimeWindow(dt_front=250, dt_back=250)
+    allInsertionTMs = EdittingModule.getAllInertionTimeWindow(dt_front=1000, dt_back=1000)
     # iterate all insertion time window
     lastIndex_video = 0
+    lastIndex_gaze = 0
     for i_itw in range(0, len(allInsertionTMs)):
         TM_at = allInsertionTMs[i_itw]
-        #
+        # get video range
         video_index_range = (Time.Time().findPositionInTimeArray(TM_at[0], at_video, lastIndex_video),
                              Time.Time().findPositionInTimeArray(TM_at[1], at_video, lastIndex_video))
-        lastIndex_video = video_index_range[-1] # update lastfound index
-
-
-
-
-
-
-
-
-    # iterate cap
-    for i_v in range(start_v, end_v + 1):
-        _, frame = cap.read()
-        # get gaze info
-        at_gaze = at_video[i_v]
-        x = length * data_gaze_videoTimeDomain[0][i_v - start_v]
-        y = width * data_gaze_videoTimeDomain[1][i_v - start_v]
-        # get cursor info
-        cursor_p_tuple = getCursorPosition(at_gaze, ats_cursor, xs_cursor, ys_cursor)
-        # plot gaze
-        cv2.circle(frame, (int(x), int(y)), 5, (0, 0, 255), -1)
-        # plot cursor
-        a = (int(cursor_p_tuple[0]), int(cursor_p_tuple[1]))
-        print(str(a))
-        cv2.circle(frame, (int(cursor_p_tuple[0]), int(cursor_p_tuple[1])), 10, (0, 255, 0), -1)
-
-        cv2.imshow('frame', frame) # show frame
-        # break point
-        if cv2.waitKey(30) & 0xFF == ord('q'):
-            break
-
-
-
-
-
+        lastIndex_video = video_index_range[-1] # update last found index
+        # get gaze range
+        gaze_index_range = (Time.Time().findPositionInTimeArray(TM_at[0], full_gaze_at, lastIndex_gaze),
+                             Time.Time().findPositionInTimeArray(TM_at[1], full_gaze_at, lastIndex_gaze))
+        lastIndex_gaze = gaze_index_range[-1] # update last found index
+        # Editing visualization
+        Visualization.EditingTimeWindowVisualization(at_video, cap, video_index_range, full_gaze_at, full_gaze_data, gaze_index_range)
+    cap.release()
+    cv2.destroyAllWindows()
 
 
 

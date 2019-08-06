@@ -42,7 +42,7 @@ class EditingModule():
         insertion_time_window_list = []
         for at in self.insertion_at_list:
             # generate time window
-            tm = (Time.Time().substractByNms(dt_front), Time.Time().addByNms(dt_back))
+            tm = (Time.Time().substractByNms(at, dt_front), Time.Time().addByNms(at, dt_back))
             insertion_time_window_list.append(tm)
         return insertion_time_window_list
 

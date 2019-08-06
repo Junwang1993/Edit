@@ -42,7 +42,7 @@ class ConvertTimeDomainToVideo(object):
         refine_ats = []
         refine_data = []
         for i in range(0, len(insertData)):
-            refine_data.insert([])
+            refine_data.append([])
         # two index
         i_insert = 0
         i_full = 0
@@ -55,7 +55,7 @@ class ConvertTimeDomainToVideo(object):
                     at_insert = insert_ats[i_insert]
                     at_full = full_ats[i_full]
                     # compare who is larger
-                    flag = Time.Time.compareTwoTsime(at_insert, at_full)
+                    flag = Time.Time().compareTwoTime(at_insert, at_full)
                     if flag <0:
                         # at_insert is less
                         refine_ats.append(at_insert)
