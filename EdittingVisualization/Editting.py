@@ -1,64 +1,49 @@
 import numpy as np
 import Time
-# static method
+class WritingPositionModule(object):
+    def __init__(self, ats_wp, xs_wp, ys_wp):
+        # inner parameter
+        self.ats_wp = ats_wp
+        self.xs_wp = xs_wp
+        self.ys_wp = ys_wp
+    def getCurrentWritingPlace(self, at_check):
+        index_wp = Time.Time().findPositionInTimeArray(at_check, self.ats_wp)-1
+        if index_wp<0:
+            index_wp = 0
+        if index_wp>=len(self.ys_wp)-1:
+            index_wp = len(self.ys_wp)-1
+        # if index_wp == -1:
+        #     index_wp = len(self.ys_wp) - 1
+        print(index_wp)
+        return  (self.xs_wp[index_wp], self.ys_wp[index_wp])
 
-class EditingModule():
-    def __init__(self, ats_cursor, xs_cursor, ys_cursor):
+class CursorPositionModule(object):
+    def __init__(self, ats_cp, xs_cp, ys_cp):
+        # inner parameter
+        self.ats_cp = ats_cp
+        self.xs_cp = xs_cp
+        self.ys_cp = ys_cp
+    def getCurrentWritingPlace(self, at_check):
+        index_cp = Time.Time().findPositionInTimeArray(at_check, self.ats_cp)-1
+        if index_cp<0:
+            index_cp = 0
+        if index_cp>=len(self.ys_cp)-1:
+            index_cp = len(self.ys_cp)-1
+        # if index_wp == -1:
+        #     index_wp = len(self.ys_wp) - 1
+        return  (self.xs_cp[index_cp], self.ys_cp[index_cp])
+
+class EditingModule(object):
+    def __init__(self, ats_cursor, xs_cursor, ys_cursor, writing_position_module):
         # holder
         self.insertion_at_list = []
         # inner parameter
         self.ats_cursor = ats_cursor
         self.xs_cursor = xs_cursor
         self.ys_cursor = ys_cursor
-        # processing
-        self.process_InsertingPoints()
+        self.wpm = writing_position_module
 
-
-    def isInserting(self, lastCursor, currentCursor, thres_x_diff = -20, thres_y_diff = -20):
-        # cursor moving back
-        if currentCursor[1] - lastCursor[1] <= thres_y_diff:
-            return True
-        elif currentCursor[0] - lastCursor[0] <= thres_x_diff:
-            return True
-        return False
-
-
-    def process_InsertingPoints(self):
-        for i in range(1, len(self.ats_cursor)):
-            lastCursor = (self.xs_cursor[i-1], self.ys_cursor[i-1])
-            currentCursor = (self.xs_cursor[i], self.ys_cursor[i])
-            # info
-            delta_y = (currentCursor[1] - lastCursor[1])
-            delta_x = (currentCursor[0] - lastCursor[0])
-            insert_flag = self.isInserting(lastCursor, currentCursor)
-            if insert_flag == True:
-                self.insertion_at_list.append(self.ats_cursor[i])
-
-    def getInsertAtList(self):
-        return self.insertion_at_list
-
-    def getAllInertionTimeWindow(self, dt_front, dt_back):
-        # return a at tuple list
-        insertion_time_window_list = []
-        for at in self.insertion_at_list:
-            # generate time window
-            tm = (Time.Time().substractByNms(at, dt_front), Time.Time().addByNms(at, dt_back))
-            insertion_time_window_list.append(tm)
-        return insertion_time_window_list
-
-class EditingModule():
-    def __init__(self, ats_cursor, xs_cursor, ys_cursor):
-        # holder
-        self.insertion_at_list = []
-        # inner parameter
-        self.ats_cursor = ats_cursor
-        self.xs_cursor = xs_cursor
-        self.ys_cursor = ys_cursor
-        # processing
-        self.process_InsertingPoints()
-
-
-    def ExtractFullEdittingIntervals(self, characterWidth = 20, lineHeight = 20):
+    def ExtractFullEdittingIntervals(self, characterWidth = 10, lineHeight = 80):
         # full means: moving back caret (maybe multiple moving) then i
         #             insert new info than move to current place
 
@@ -67,37 +52,74 @@ class EditingModule():
         start_movingBack = None
         start_typing = None
         start_movingCurrent = None
+        d = None
 
         FullEdittingIntervals = []
+        sequence_ys = []
+
         current_caret_position = (self.xs_cursor[0], self.ys_cursor[0])
+        current_writing_position = self.wpm.getCurrentWritingPlace(self.ats_cursor[0])
+        if current_writing_position ==(0,0):
+            current_writing_position =(self.xs_cursor[0], self.ys_cursor[0])
+
         # start to iterate
-        for i in range(1, len(ats_cursor)):
+        for i in range(1, len(self.ats_cursor)):
+            next_at = self.ats_cursor[i]
             next_caret_x = self.xs_cursor[i]
             next_caret_y = self.ys_cursor[i]
-            d_x = current_caret_position[0]-next_caret_x
-            d_y = current_caret_position[1]-next_caret_y
-            if d_x >= characterWidth or d_y >= lineHeight:
+            # get writing position
+            current_writing_position = self.wpm.getCurrentWritingPlace(self.ats_cursor[i])
+            if current_writing_position == (0, 0):
+                current_writing_position = (self.xs_cursor[i], self.ys_cursor[i])
+
+
+
+            d_x_wp = current_writing_position[0]-next_caret_x
+            d_y_wp = current_writing_position[1]-next_caret_y
+            d_x_c = current_caret_position[0] -next_caret_x
+            d_y_c = current_caret_position[1] - next_caret_y
+
+
+            if ((d_x_c >= characterWidth and (d_y_c)>=-5) or d_y_c >= lineHeight):
                 # moving backard
-                if start_movingBack != None:
-                    start_movingBack = i
-            elif abs(d_x)<=10 and abs(d_y)<=10:
+                if start_movingBack == None:
+                    start_movingBack = i-2
+                    d = str(int(d_x_c))+'_'+str(int(d_y_c))
+
+
+            elif abs(d_x_c)<=10 and abs(d_y_c)<=20:
                 # not moving
                 pass
+
             else:
                 # moving forward
-                # check whether it has already moving back to current caret
+                # check whether it has already moving back to current writing place
 
-                if (next_caret_y+10>=current_caret_position[1]) or (next_caret_y+10>=current_caret_position[1] and next_caret_x+10>=current_caret_position[0]):
+                if (next_caret_y+10>=current_writing_position[1]+lineHeight) or (abs(next_caret_y-current_writing_position[1])<=20 and next_caret_x+10>=current_writing_position[0]):
                     if start_movingBack != None:
                         start_movingCurrent = i
                         # adding
-                        FullEdittingIntervals.append((start_movingBack, start_typing, start_movingBack))
-                        current_caret_position = (next_caret_x, next_caret_y)
+                        FullEdittingIntervals.append((self.ats_cursor[start_movingBack], self.ats_cursor[start_movingCurrent], d))
+                        if len(FullEdittingIntervals) == 6:
+                            print('dd')
+                        sequence_ys.append(self.ys_cursor[start_movingBack:start_movingCurrent+1])
+                        # reassign
+                        start_movingBack = None
+                        start_typing = None
+                        start_movingCurrent = None
+                        d = None
 
-                if start_movingBack != None and start_movingCurrent == None:
-                    if start_typing != None:
+                elif start_movingBack != None and start_typing == None:
                         start_typing = i
+            # update caret position
+            current_caret_position = (next_caret_x, next_caret_y)
 
-        self.FullEdittingIntervals_index = FullEdittingIntervals
-
-
+        self.FullEdittingIntervals = []
+        self.FullEdittingIntervals = FullEdittingIntervals
+        # sequence_ys = [np.diff(np.array(seq)).tolist() for seq in sequence_ys]
+        # # refine
+        # for i in range(0, len(FullEdittingIntervals)):
+        #     seq_ys = sequence_ys[i]
+        #     if abs(min(seq_ys)-max(seq_ys))<=5:
+        #         self.FullEdittingIntervals.append(FullEdittingIntervals[i])
+        print('d')

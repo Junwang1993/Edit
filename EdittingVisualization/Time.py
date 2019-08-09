@@ -105,6 +105,8 @@ class Time(object):
 
     @staticmethod
     def toString(at):
+        if at ==None:
+            return 'None'
         return str(at.h)+str(':')+str(at.m)+str(':')+str(at.s)+str(':')+str(at.ms)
 
     @staticmethod

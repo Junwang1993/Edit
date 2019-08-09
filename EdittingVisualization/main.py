@@ -37,20 +37,16 @@ def getCursorPosition(at_wanted, ats_cursor, xs_cursor, ys_cursor, length = 1680
         i = 0
     if i >= len(ats_cursor):
         i = len(ats_cursor)-1
+    if i == -1:
+        i = len(ats_cursor)-1
     # cursor position tuple
     cursor_p = (xs_cursor[i], ys_cursor[i])
     return cursor_p
 
-def getKeyboardInfoInGivenAtInterval(at_interval, ats, info_types, keypressInfo):
-    f_at = at_interval[0]
-    b_at = at_interval[1]
-    # determine the range in keyboard info list
-    f_index = Time.Time().findPositionInTimeArray(f_at, ats)-1
-    b_index = Time.Time().findPositionInTimeArray(b_at, ats)-1
-    # return info
+def refineKeyboardInfoInGivenAtInterval(ats, info_types, keypressInfo):
     refine_ats = []
     refine_keypresses = []
-    for i in range(f_index, b_index+1):
+    for i in range(0, len(ats)):
         # checking type
         type = info_types[i]
         if type == 'KeyboardDown':
@@ -66,7 +62,7 @@ length = 1680.0
 width = 1050.0
 fileDirs, fileMarks = getAllFile([1]) # only extract college data
 # iterate all task
-for i_file in range(0, len(fileDirs)):
+for i_file in range(3, len(fileDirs)):
     #print(str(i))
     dir = fileDirs[i_file]
     # get csv file
@@ -94,7 +90,7 @@ for i_file in range(0, len(fileDirs)):
     full_gaze_at, full_gaze_data = ConvertTimeDomainToVideo.ConvertTimeDomainToVideo().InsertInterpolateListBack(at_video[start_v:end_v],at_gaze,data_gaze_videoTimeDomain,data_gaze[1:len(data_gaze)])
 
     # get cursor position info
-    csv3 = CsvReader.CsvReader(glob(dir + '*cursor*.csv')[0])
+    csv3 = CsvReader.CsvReader(glob(dir + '*newCursor*.csv')[0])
     data_cursor = csv3.getData([0, 1, 2], hasHeader=1, needHandleNegativeOneIndex=[], flag=True)
     ats_cursor = [Time.Time(at) for at in data_cursor[0]]
     xs_cursor = [float(x) for x in data_cursor[1]]
@@ -102,22 +98,37 @@ for i_file in range(0, len(fileDirs)):
     # read keyboard info
     csv4 = CsvReader.CsvReader(glob(dir + '*mouse*.csv')[0])
     data_keyboard = csv4.getData([0, 2, 3], hasHeader=1, needHandleNegativeOneIndex=[], flag=True)
-    ats_cursor = [Time.Time(at) for at in data_keyboard[0]]
+    ats_keyboard = [Time.Time(at) for at in data_keyboard[0]]
     info_types = data_keyboard[1]
     keypressInfo = data_keyboard[2]
+    # refine
+    refine_ats_keypresses, refine_keypresses_info = refineKeyboardInfoInGivenAtInterval(ats_keyboard, info_types, keypressInfo)
+    # refine cursor info
+    i_cursor_start = Time.Time().findPositionInTimeArray(refine_ats_keypresses[1],ats_cursor)
+    ats_cursor = ats_cursor[i_cursor_start:]
+    xs_cursor = xs_cursor[i_cursor_start:]
+    ys_cursor = ys_cursor[i_cursor_start:]
+    # read writing position info
+    csv5 = CsvReader.CsvReader(glob(dir+'*writing*.csv')[0])
+    data_wp = csv5.getData([0,1,2], hasHeader=0, needHandleNegativeOneIndex=[], flag=True)
+    ats_wp = [Time.Time(at) for at in data_wp[0]]
+    xs_wp = [float(at) for at in data_wp[1]]
+    ys_wp = [float(at) for at in data_wp[2]]
+    WPM = Editting.WritingPositionModule(ats_wp,xs_wp,ys_wp)
+    CPM = Editting.CursorPositionModule(ats_cursor, xs_cursor, ys_cursor)
     # read video
     cap = cv2.VideoCapture(glob(dir + 'window*.avi')[0])
     # setting start point
     cap.set(1, start_v)
     # editting module
-    EdittingModule = Editting.EditingModule(ats_cursor, xs_cursor, ys_cursor)
+    EdittingModule = Editting.EditingModule(ats_cursor, xs_cursor, ys_cursor,WPM)
     # get all insertions time window
-    allInsertionTMs = EdittingModule.getAllInertionTimeWindow(dt_front=1000, dt_back=1000)
+    EdittingModule.ExtractFullEdittingIntervals()
     # iterate all insertion time window
     lastIndex_video = 0
     lastIndex_gaze = 0
-    for i_itw in range(0, len(allInsertionTMs)):
-        TM_at = allInsertionTMs[i_itw]
+    for i_itw in range(0, len(EdittingModule.FullEdittingIntervals)):
+        TM_at = EdittingModule.FullEdittingIntervals[i_itw]
         # get video range
         video_index_range = (Time.Time().findPositionInTimeArray(TM_at[0], at_video, lastIndex_video),
                              Time.Time().findPositionInTimeArray(TM_at[1], at_video, lastIndex_video))
@@ -127,9 +138,12 @@ for i_file in range(0, len(fileDirs)):
                              Time.Time().findPositionInTimeArray(TM_at[1], full_gaze_at, lastIndex_gaze))
         lastIndex_gaze = gaze_index_range[-1] # update last found index
         # Editing visualization
-        Visualization.EditingTimeWindowVisualization(at_video, cap, video_index_range, full_gaze_at, full_gaze_data, gaze_index_range)
+        filename = dir+'EditVideo//editing'+str(i_itw)+'_'+TM_at[-1]+'.avi'
+        Visualization.EditingTimeWindowVisualization(at_video, cap, video_index_range, full_gaze_at, full_gaze_data, gaze_index_range, CPM, filename)
     cap.release()
     cv2.destroyAllWindows()
+    break
+
 
 
 
