@@ -5,6 +5,8 @@ from GetTextArea import findWordsOptionArea
 from glob import glob
 import CsvReader
 import Time
+import Editting
+
 def findTextCursorPosition(cFrame, lFrame):
 
     # check words option box shown

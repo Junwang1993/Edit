@@ -1,5 +1,20 @@
 import numpy as np
 import Time
+
+def getCursorPosition(at_wanted, ats_cursor, xs_cursor, ys_cursor, length = 1680.0, width = 1050.0):
+    # found index need to substract one
+    i = Time.Time().findPositionInTimeArray(at_wanted, ats_cursor)-1
+    # refine index
+    if i <0:
+        i = 0
+    if i >= len(ats_cursor):
+        i = len(ats_cursor)-1
+    if i == -1:
+        i = len(ats_cursor)-1
+    # cursor position tuple
+    cursor_p = (xs_cursor[i], ys_cursor[i])
+    return cursor_p
+
 class WritingPositionModule(object):
     def __init__(self, ats_wp, xs_wp, ys_wp):
         # inner parameter
@@ -52,7 +67,7 @@ class EditingModule(object):
         start_movingBack = None
         start_typing = None
         start_movingCurrent = None
-        d = None
+
 
         FullEdittingIntervals = []
         sequence_ys = []
@@ -84,7 +99,7 @@ class EditingModule(object):
                 # moving backard
                 if start_movingBack == None:
                     start_movingBack = i-2
-                    d = str(int(d_x_c))+'_'+str(int(d_y_c))
+
 
 
             elif abs(d_x_c)<=10 and abs(d_y_c)<=20:
@@ -99,7 +114,7 @@ class EditingModule(object):
                     if start_movingBack != None:
                         start_movingCurrent = i
                         # adding
-                        FullEdittingIntervals.append((self.ats_cursor[start_movingBack], self.ats_cursor[start_movingCurrent], d))
+                        FullEdittingIntervals.append((self.ats_cursor[start_movingBack], self.ats_cursor[start_movingCurrent], start_typing))
                         if len(FullEdittingIntervals) == 6:
                             print('dd')
                         sequence_ys.append(self.ys_cursor[start_movingBack:start_movingCurrent+1])
@@ -107,7 +122,6 @@ class EditingModule(object):
                         start_movingBack = None
                         start_typing = None
                         start_movingCurrent = None
-                        d = None
 
                 elif start_movingBack != None and start_typing == None:
                         start_typing = i

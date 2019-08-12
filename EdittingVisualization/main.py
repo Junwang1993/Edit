@@ -29,19 +29,7 @@ def getAllFile(age_wanted):
             subjectID = subjectID+1
     return fileDirs, fileMarks
 
-def getCursorPosition(at_wanted, ats_cursor, xs_cursor, ys_cursor, length = 1680.0, width = 1050.0):
-    # found index need to substract one
-    i = Time.Time().findPositionInTimeArray(at_wanted, ats_cursor)-1
-    # refine index
-    if i <0:
-        i = 0
-    if i >= len(ats_cursor):
-        i = len(ats_cursor)-1
-    if i == -1:
-        i = len(ats_cursor)-1
-    # cursor position tuple
-    cursor_p = (xs_cursor[i], ys_cursor[i])
-    return cursor_p
+
 
 def refineKeyboardInfoInGivenAtInterval(ats, info_types, keypressInfo):
     refine_ats = []
