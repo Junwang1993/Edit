@@ -24,7 +24,7 @@ def Refined_find_index_in_ATs(at, ats, lastFoundIndex):
 
 class EditingIndex(object):
     # ------f_full--(delta)--f_edit---t---b_edit--(delta)--b_full
-    def __init__(self, f_full_gaze, f_edit_gaze, f_full_kb, f_edit_kb, b_full_gaze, b_edit_gaze, b_full_kb, b_edit_kb, t_gaze, t_kb):
+    def __init__(self, f_full_gaze=None, f_edit_gaze=None, f_full_kb=None, f_edit_kb=None, b_full_gaze=None, b_edit_gaze=None, b_full_kb=None, b_edit_kb=None, t_gaze=None, t_kb=None):
         self.f_full_gaze = f_full_gaze
         self.f_edit_gaze = f_edit_gaze
         self.f_full_kb = f_full_kb
@@ -240,6 +240,29 @@ class FeaturesAheadEditingPointModule(object):
         # delta
         self.deltaT = deltaT
 
+    def distanceBetweenCaret(self, fixationP, caretP, word_width = 20, line_height = 100):
+        # positive is before the caret
+        # negative is after the caret
+        dx = caretP[0] - fixationP[0]
+        dy = caretP[1] - fixationP[1]
+        # determine type of position before/after  distal/near
+        type1 = None
+        type2 = None
+        if dy >= 0.5 * line_height:
+            type1 = 'ahead'
+            type2 = 'distal'
+        elif dy < 0.5 * line_height and dy >= -0.5 * line_height:
+            if dx >= 0:
+                type1 = 'ahead'
+                type2 = 'near'
+            else:
+                type1 = 'behind'
+                type2 = 'near'
+        else:
+            type1 = 'behind'
+            type2 = 'distal'
+        return  type1, type2, dx, dy
+
     def preprocess_extract_editingRangeIndex(self):
         self.editingIndexRange = []
         # iterate all editing interval
@@ -248,5 +271,95 @@ class FeaturesAheadEditingPointModule(object):
         lastFoundIndex_kb = 0
         for i in range(0, len(self.editingAtRange)):
             one_edit_at_range = self.editingAtRange[i]
-            editing_at_moment = one_edit_at_range[2] # at moment that start editing
+            editing_at_moment = one_edit_at_range[0] # at moment that start editing (start moving back)
+            # feature extract range
+            at_f = Time.Time().substractByNms(one_edit_at_range, self.deltaT)
+            at_b = editing_at_moment
+            # find gaze index
+            f_full_gaze = Refined_find_index_in_ATs(at_f, self.ats_gaze, lastFoundIndex_gaze)
+            b_full_gaze = Refined_find_index_in_ATs(at_b, self.ats_gaze, lastFoundIndex_gaze)
+            lastFoundIndex_gaze = f_full_gaze
+            # find keyboard index
+            f_full_kb = Refined_find_index_in_ATs(at_f, self.ats_kb, lastFoundIndex_kb)
+            b_full_kb = Refined_find_index_in_ATs(at_b, self.ats_kb, lastFoundIndex_kb)
+            lastFoundIndex_kb = f_full_kb
+            ei = EditingIndex(
+                f_full_gaze=f_full_gaze,
+                f_full_kb=f_full_kb,
+                b_full_gaze=b_full_gaze,
+                b_full_kb=b_full_kb
+            )
+            self.editingIndexRange.append(ei)
 
+    def extractFixationFeaturesList(self, ats_inRange_gaze, xs_inRange_gaze, ys_inRange_gaze,
+                                ats_inRange_cursor, xs_inRange_cursor, ys_inRange_cursor,):
+        # initial holder
+        self.fixation_fvl = {
+            'allFixationDur': [],
+            'allFixationPositionType1':[], # ahead or behind
+            'allFixationPositionType2':[],
+            'd2c_x': [],
+            'd2c_y': []
+        }
+        # build rts
+        rts_inRange_gaze = ConvertATs2RTs(ats_inRange_gaze)
+        # detect fixation
+        _, _, EfixTuple_index = FixationDetection.fixation_IDT_V2(xs_inRange_gaze, ys_inRange_gaze, rts_inRange_gaze)
+        # iterate all fixations
+        for i in range(0, len(EfixTuple_index)):
+            # one fixation
+            f_f_i = EfixTuple_index[i][0]
+            f_b_i = EfixTuple_index[i][1] + 1
+            fixation_at = ats_inRange_gaze[f_f_i]
+            fixation_x = np.array(xs_inRange_gaze[f_f_i:f_b_i]).mean()
+            fixation_y = np.array(ys_inRange_gaze[f_f_i:f_b_i]).mean()
+            # get current caret position
+            caretP = Editting.getCursorPosition(fixation_at, self.caretATs, self.caretXs, self.caretYs)
+            # fixation duration
+            f_dur = rts_inRange_gaze[f_b_i] - rts_inRange_gaze[f_f_i]
+            # determine fixation ---local position---
+            relativeP_type, distance_type, dx2caret, dy2caret = self.distanceBetweenCaret((fixation_x, fixation_y), caretP)
+            self.fixation_fvl['allFixationDur'].append(f_dur)
+            self.fixation_fvl['d2c_x'].append(dx2caret)
+            self.fixation_fvl['d2c_y'].append(dy2caret)
+            self.fixation_fvl['allFixationPositionType1'].append(relativeP_type)
+            self.fixation_fvl['allFixationPositionType2'].append(distance_type)
+
+    def extractFixationFeaturesVector(self):
+        # extracting features from features list
+        fv_names = []
+        fv = []
+        # dur related features
+        fv_names.append('dur_mean')
+        fv.append(np.array(self.fixation_fvl['allFixationDur']).mean())
+        fv_names.append('dur_std')
+        fv.append(np.array(self.fixation_fvl['allFixationDur']).std())
+        fv_names.append('dur_85')
+        fv.append(np.percentile(np.array(self.fixation_fvl['allFixationDur']), 85))
+        fv_names.append('dur_15')
+        fv.append(np.percentile(np.array(self.fixation_fvl['allFixationDur']), 15))
+        # distance-x
+        fv_names.append('dist_x_mean')
+        fv.append(np.array(self.fixation_fvl['d2c_x']).mean())
+        fv_names.append('dist_x_std')
+        fv.append(np.array(self.fixation_fvl['d2c_x']).std())
+        fv_names.append('dist_x_85')
+        fv.append(np.percentile(np.array(self.fixation_fvl['d2c_x']), 85))
+        fv_names.append('dist_x_15')
+        fv.append(np.percentile(np.array(self.fixation_fvl['d2c_x']), 15))
+        # distance-y
+        fv_names.append('dist_y_mean')
+        fv.append(np.array(self.fixation_fvl['d2c_y']).mean())
+        fv_names.append('dist_y_std')
+        fv.append(np.array(self.fixation_fvl['d2c_y']).std())
+        fv_names.append('dist_y_85')
+        fv.append(np.percentile(np.array(self.fixation_fvl['d2c_y']), 85))
+        fv_names.append('dist_y_15')
+        fv.append(np.percentile(np.array(self.fixation_fvl['d2c_y']), 15))
+        # type 1 ratio
+        fv_names.append('behind_ratio')
+        fv.append(float(self.fixation_fvl['allFixationPositionType1'].count('behind'))/float(len(self.fixation_fvl['allFixationPositionType1'])))
+        # type 2 ratio
+        fv_names.append('distal_ratio')
+        fv.append(float(self.fixation_fvl['allFixationPositionType2'].count('distal'))/float(len(self.fixation_fvl['allFixationPositionType2'])))
+        return fv, fv_names

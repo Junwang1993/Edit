@@ -50,7 +50,7 @@ length = 1680.0
 width = 1050.0
 fileDirs, fileMarks = getAllFile([1]) # only extract college data
 # iterate all task
-for i_file in range(3, len(fileDirs)):
+for i_file in range(0, len(fileDirs)):
     #print(str(i))
     dir = fileDirs[i_file]
     # get csv file
@@ -110,13 +110,13 @@ for i_file in range(3, len(fileDirs)):
     cap.set(1, start_v)
     # editting module
     EdittingModule = Editting.EditingModule(ats_cursor, xs_cursor, ys_cursor,WPM)
-    # get all insertions time window
-    EdittingModule.ExtractFullEdittingIntervals()
+
     # iterate all insertion time window
     lastIndex_video = 0
     lastIndex_gaze = 0
     for i_itw in range(0, len(EdittingModule.FullEdittingIntervals)):
         TM_at = EdittingModule.FullEdittingIntervals[i_itw]
+        type = EdittingModule.editingTypes[i_itw]
         # get video range
         video_index_range = (Time.Time().findPositionInTimeArray(TM_at[0], at_video, lastIndex_video),
                              Time.Time().findPositionInTimeArray(TM_at[1], at_video, lastIndex_video))
@@ -126,7 +126,7 @@ for i_file in range(3, len(fileDirs)):
                              Time.Time().findPositionInTimeArray(TM_at[1], full_gaze_at, lastIndex_gaze))
         lastIndex_gaze = gaze_index_range[-1] # update last found index
         # Editing visualization
-        filename = dir+'EditVideo//editing'+str(i_itw)+'_'+TM_at[-1]+'.avi'
+        filename = dir+'EditVideo//editing'+str(i_itw)+'_'+str(type)+'.avi'
         Visualization.EditingTimeWindowVisualization(at_video, cap, video_index_range, full_gaze_at, full_gaze_data, gaze_index_range, CPM, filename)
     cap.release()
     cv2.destroyAllWindows()

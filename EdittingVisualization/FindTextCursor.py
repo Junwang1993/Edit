@@ -12,8 +12,8 @@ def findTextCursorPosition(cFrame, lFrame):
     # check words option box shown
     flag = isWordsOptionAppear(cFrame[70:-40, 0:-400])
     if flag == True:
-        [x1, x2, y1, y2] = findWordsOptionArea(cFrame[0:-40, 0:-400])
-        return [x1-4, y1-5]
+        [x1, x2, y1, y2] = findWordsOptionArea(cFrame[70:-40, 0:-200])
+        return [x1-4, y1-5+70]
     else:
 
         # cv2.imshow('frame', cFrame)
@@ -72,12 +72,15 @@ for i_file in range(0, len(fileDirs)):
     ys = []
 
     dir = fileDirs[i_file]
+    check_contain = len(glob(dir+'*window*.avi'))>0
+    if check_contain == False:
+        continue
     file = glob(dir+'*window*.avi')[0]
     csv2 = CsvReader.CsvReader(glob(dir + 'window*.csv')[0])
     data_video = csv2.getData([0, 1], hasHeader=0, needHandleNegativeOneIndex=[], flag=False)
     at_video = [Time.Time(i) for i in data_video[1]]
     cap = cv2.VideoCapture(file)
-    #cap.set(1,7500)
+    # cap.set(1,700)
     index = 0
     lastTextCursorPosition = [0, 0]
     while(cap.isOpened()):
@@ -94,8 +97,8 @@ for i_file in range(0, len(fileDirs)):
                 lastTextCursorPosition = tcp
             # cv2.circle(frame, (int(tcp[0]), int(tcp[1])), 5, (255,0,0),-1)
             # cv2.imshow('frame', frame)
-            # if cv2.waitKey(50) & 0xFF == ord('q'):
-            #     break
+            if cv2.waitKey(50) & 0xFF == ord('q'):
+                break
             if not(tcp[0]==-1 or tcp[1]==-1):
                 allAts.append(at_video[index])
                 xs.append(int(tcp[0]))
@@ -114,4 +117,5 @@ for i_file in range(0, len(fileDirs)):
 
     cap.release()
     cv2.destroyAllWindows()
+
 

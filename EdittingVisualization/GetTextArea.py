@@ -356,7 +356,7 @@ def findWordsOptionArea(frame):
     redArea = cv2.cvtColor(redArea, cv2.COLOR_RGBA2GRAY)
     redArea = cv2.threshold(redArea, 10, 255, cv2.THRESH_BINARY)[1]
     redArea = cv2.dilate(redArea, cv2.getStructuringElement(cv2.MORPH_RECT, (4, 2)), iterations=5)  # dilate
-    #cv2.imshow("a", redArea)
+    # cv2.imshow("a", redArea)
     # cv2.imshow("b", frame)
     _, contours, _ = cv2.findContours(redArea, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     [x1, x2, y1, y2] = [1680, 0 , 1050, 0]
@@ -414,7 +414,7 @@ def isWordsOptionAppear(frame):
         area = cv2.contourArea(c)
         totalArea += area
     print(totalArea)
-    if totalArea<3000:
+    if totalArea<1000:
         return False
     else:
         return True

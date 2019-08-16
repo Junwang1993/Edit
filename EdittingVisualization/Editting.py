@@ -57,6 +57,9 @@ class EditingModule(object):
         self.xs_cursor = xs_cursor
         self.ys_cursor = ys_cursor
         self.wpm = writing_position_module
+        # preprocessing
+        self.ExtractFullEdittingIntervals()
+        self.determineTypeOfEditing()
 
     def ExtractFullEdittingIntervals(self, characterWidth = 10, lineHeight = 80):
         # full means: moving back caret (maybe multiple moving) then i
@@ -66,10 +69,13 @@ class EditingModule(object):
         # parameters to find editing interval
         start_movingBack = None
         start_typing = None
+        start_typing_p = None
         start_movingCurrent = None
 
 
+
         FullEdittingIntervals = []
+        FullEdittingTypingPositions = []
         sequence_ys = []
 
         current_caret_position = (self.xs_cursor[0], self.ys_cursor[0])
@@ -114,26 +120,57 @@ class EditingModule(object):
                     if start_movingBack != None:
                         start_movingCurrent = i
                         # adding
-                        FullEdittingIntervals.append((self.ats_cursor[start_movingBack], self.ats_cursor[start_movingCurrent], start_typing))
+                        if start_typing != None:
+                            FullEdittingIntervals.append((self.ats_cursor[start_movingBack], self.ats_cursor[start_movingCurrent],self.ats_cursor[start_typing]))
+                            FullEdittingTypingPositions.append(start_typing_p)
+                        else:
+                            FullEdittingIntervals.append((self.ats_cursor[start_movingBack],
+                                                          self.ats_cursor[start_movingCurrent],
+                                                          None))
+                            FullEdittingTypingPositions.append(None)
                         if len(FullEdittingIntervals) == 6:
                             print('dd')
                         sequence_ys.append(self.ys_cursor[start_movingBack:start_movingCurrent+1])
                         # reassign
                         start_movingBack = None
                         start_typing = None
+                        start_typing_p =None
                         start_movingCurrent = None
 
                 elif start_movingBack != None and start_typing == None:
                         start_typing = i
+                        start_typing_p = (next_caret_x, next_caret_y)
             # update caret position
             current_caret_position = (next_caret_x, next_caret_y)
 
-        self.FullEdittingIntervals = []
         self.FullEdittingIntervals = FullEdittingIntervals
-        # sequence_ys = [np.diff(np.array(seq)).tolist() for seq in sequence_ys]
-        # # refine
-        # for i in range(0, len(FullEdittingIntervals)):
-        #     seq_ys = sequence_ys[i]
-        #     if abs(min(seq_ys)-max(seq_ys))<=5:
-        #         self.FullEdittingIntervals.append(FullEdittingIntervals[i])
+        self.FullEdittingTypingPostions = FullEdittingTypingPositions
+
         print('d')
+
+    def AreTwoPointsClose(self, p1, p2, thres_x=10, thres_y=10):
+        # true is close
+        # false is not close
+        if abs(p1[0]-p2[0])<=thres_x and abs(p1[1]-p2[1])<=thres_y:
+            return True
+        else:
+            return False
+
+    def determineTypeOfEditing(self):
+        # Types: insertion, deletion
+        # Tuple: at_moving_back, at_moving_toCurren, at_typing
+        self.editingTypes = []
+        for i in range(0, len(self.FullEdittingIntervals)):
+            tuple = self.FullEdittingIntervals[i]
+            if tuple[-1] == None:
+                self.editingTypes.append('Deletion')
+            else:
+                # check writing position...
+                cwP = self.wpm.getCurrentWritingPlace(tuple[-1])
+                caretP = self.FullEdittingTypingPostions[i]
+                flag_close = self.AreTwoPointsClose(cwP, caretP)
+                if not flag_close:
+                    self.editingTypes.append('Insertion')
+                else:
+                    self.editingTypes.append('Deletion')
+
