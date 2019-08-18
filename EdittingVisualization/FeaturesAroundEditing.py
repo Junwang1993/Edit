@@ -219,7 +219,7 @@ class FeaturesNearEditingPointModule(object):
 
 class FeaturesAheadEditingPointModule(object):
 
-    def __init__(self, ats_gaze, xs_gaze, ys_gaze, ats_kb, keyInfo_kb, editingAtRange, caretATs, caretXs, caretYs, writingPositionATs, writingPositionXs, writingPositionYs, deltaT = 1000):
+    def __init__(self, ats_gaze, xs_gaze, ys_gaze, ats_kb, keyInfo_kb, editingAtRange, editingType,caretATs, caretXs, caretYs, writingPositionATs, writingPositionXs, writingPositionYs, deltaT = 1000):
         # gaze
         self.ats_gaze = ats_gaze
         self.xs_gaze = xs_gaze
@@ -229,6 +229,7 @@ class FeaturesAheadEditingPointModule(object):
         self.keyInfo_kb = keyInfo_kb
         # editing
         self.editingAtRange = editingAtRange
+        self.editingType = editingType
         # caret
         self.caretATs = caretATs
         self.caretXs = caretXs
@@ -239,6 +240,27 @@ class FeaturesAheadEditingPointModule(object):
         self.writingPositionYs = writingPositionYs
         # delta
         self.deltaT = deltaT
+        # preprocessing
+        self.preprocess_extract_editingRangeIndex()
+        self.process()
+
+    def process(self):
+        self.fvs = []
+        self.lbs = []
+        for i in range(self.editingIndexRange):
+            ei = self.editingIndexRange[i]
+            # extracting features
+            fvl = self.extractFixationFeaturesList(
+                ats_inRange_gaze = self.ats_gaze[ei.f_full_gaze:ei.b_full_gaze],
+                xs_inRange_gaze = self.xs_gaze[ei.f_full_gaze:ei.b_full_gaze],
+                ys_inRange_gaze = self.ys_gaze[ei.f_full_gaze:ei.b_full_gaze],
+                ats_inRange_cursor = self.caretATs[ei.f_full_gaze:ei.b_full_gaze],
+                xs_inRange_cursor = self.caretXs[ei.f_full_gaze:ei.b_full_gaze],
+                ys_inRange_cursor = self.caretYs[ei.f_full_gaze:ei.b_full_gaze]
+            )
+            fv, self.fv_name = self.extractFixationFeaturesVector()
+            self.fvs.append(fv)
+            self.lbs.append(self.editingType[i])
 
     def distanceBetweenCaret(self, fixationP, caretP, word_width = 20, line_height = 100):
         # positive is before the caret
@@ -292,7 +314,7 @@ class FeaturesAheadEditingPointModule(object):
             self.editingIndexRange.append(ei)
 
     def extractFixationFeaturesList(self, ats_inRange_gaze, xs_inRange_gaze, ys_inRange_gaze,
-                                ats_inRange_cursor, xs_inRange_cursor, ys_inRange_cursor,):
+                                ats_inRange_cursor, xs_inRange_cursor, ys_inRange_cursor):
         # initial holder
         self.fixation_fvl = {
             'allFixationDur': [],
@@ -324,6 +346,7 @@ class FeaturesAheadEditingPointModule(object):
             self.fixation_fvl['d2c_y'].append(dy2caret)
             self.fixation_fvl['allFixationPositionType1'].append(relativeP_type)
             self.fixation_fvl['allFixationPositionType2'].append(distance_type)
+        return self.fixation_fvl
 
     def extractFixationFeaturesVector(self):
         # extracting features from features list
