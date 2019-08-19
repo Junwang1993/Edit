@@ -44,8 +44,6 @@ def refineKeyboardInfoInGivenAtInterval(ats, info_types, keypressInfo):
     return refine_ats, refine_keypresses
 
 
-
-
 # main function
 length = 1680.0
 width = 1050.0

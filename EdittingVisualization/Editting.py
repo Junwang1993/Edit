@@ -15,6 +15,56 @@ def getCursorPosition(at_wanted, ats_cursor, xs_cursor, ys_cursor, length = 1680
     cursor_p = (xs_cursor[i], ys_cursor[i])
     return cursor_p
 
+def readEditingIntervalsCSV(self, fileName):
+    editingInterval = []
+    editingType = []
+    with open(fileName, 'r') as f:
+        for line in f:
+            line_info = line.split(',')
+            interval_f_at = Time.Time(line_info[0])
+            interval_b_at = Time.Time(line_info[1])
+            type = line_info[2]
+            # append
+            editingInterval.append((interval_f_at, interval_b_at))
+            editingType.append(type)
+    return editingInterval, editingType
+
+class CaretPositionModule(object):
+    def __init__(self, ats_c, xs_c, ys_c):
+        # inner parameter
+        self.ats_c = ats_c
+        self.xs_c = xs_c
+        self.ys_c = ys_c
+
+    def getCurrentCaretPosition(self, at_check):
+        index_c = Time.Time().findPositionInTimeArray(at_check, self.ats_c)-1
+        if index_c<0:
+            index_c = 0
+        if index_c>=len(self.ats_c):
+            index_c = len(self.ats_c)-1
+        return (self.xs_c[index_c], self.ys_c[index_c])
+
+    def getCurrentSeriesCaretPosition(self, at_check, num_following = 2):
+        index_found = self.getCurrentCaretPosition(at_check)
+        index_b = index_found + num_following
+        # refine index
+        refine_index = []
+        for i in range(index_found, index_b+1):
+            if i<0:
+                refine_index.append(0)
+            elif i> len(self.ats_c)-1:
+                refine_index.append(len(self.ats_c)-1)
+            else:
+                refine_index.append(i)
+        refine_positions = []
+        for position_index in refine_index:
+            refine_positions.append((self.xs_c[position_index],self.ys_c[position_index]))
+        return refine_positions
+
+
+
+
+
 class WritingPositionModule(object):
     def __init__(self, ats_wp, xs_wp, ys_wp):
         # inner parameter
@@ -29,7 +79,6 @@ class WritingPositionModule(object):
             index_wp = len(self.ys_wp)-1
         # if index_wp == -1:
         #     index_wp = len(self.ys_wp) - 1
-        print(index_wp)
         return  (self.xs_wp[index_wp], self.ys_wp[index_wp])
 
 class CursorPositionModule(object):
@@ -56,6 +105,9 @@ class EditingModule(object):
         self.ats_cursor = ats_cursor
         self.xs_cursor = xs_cursor
         self.ys_cursor = ys_cursor
+        # build caret module
+        self.cpm = CaretPositionModule(self.ats_cursor, self.xs_cursor, self.ys_cursor)
+        # build writing position module
         self.wpm = writing_position_module
         # preprocessing
         self.ExtractFullEdittingIntervals()
@@ -167,10 +219,35 @@ class EditingModule(object):
             else:
                 # check writing position...
                 cwP = self.wpm.getCurrentWritingPlace(tuple[-1])
-                caretP = self.FullEdittingTypingPostions[i]
-                flag_close = self.AreTwoPointsClose(cwP, caretP)
+                # ckeck series of caret positions
+                caretPs = self.cpm.getCurrentSeriesCaretPosition(tuple[-1], num_following=2)
+                flag_close = True
+                for caretP in caretPs:
+                    flag = self.AreTwoPointsClose(cwP, caretPs)
+                    if flag == False:
+                        flag_close = False
+                        break
                 if not flag_close:
                     self.editingTypes.append('Insertion')
                 else:
                     self.editingTypes.append('Deletion')
+
+    def generate2CSV(self, fileName):
+        f = open(fileName, w)
+        for i in range(0, len(self.FullEdittingIntervals)):
+            interval = self.FullEdittingIntervals[i]
+            type = self.FullEdittingTypingPostions[i]
+            line = ''
+            line += Time.Time().toString(interval[0])
+            line += ','
+            line += Time.Time().toString(interval[1])
+            line += ','
+            line += type
+            f.write(line)
+            f.write('\n')
+        f.closed
+
+
+
+
 
