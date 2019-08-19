@@ -7,6 +7,7 @@ import ConvertTimeDomainToVideo
 import DataPreprocessing
 import Editting
 import Visualization
+import os
 # functions
 def getAllFile(age_wanted):
     fileDirs = []
@@ -50,7 +51,7 @@ length = 1680.0
 width = 1050.0
 fileDirs, fileMarks = getAllFile([1]) # only extract college data
 # iterate all task
-for i_file in range(0, len(fileDirs)):
+for i_file in range(7, len(fileDirs)):
     #print(str(i))
     dir = fileDirs[i_file]
     # get csv file
@@ -126,6 +127,10 @@ for i_file in range(0, len(fileDirs)):
                              Time.Time().findPositionInTimeArray(TM_at[1], full_gaze_at, lastIndex_gaze))
         lastIndex_gaze = gaze_index_range[-1] # update last found index
         # Editing visualization
+
+        if not os.path.exists(dir+'EditVideo//'):
+            os.makedirs(dir+'EditVideo//')
+
         filename = dir+'EditVideo//editing'+str(i_itw)+'_'+str(type)+'.avi'
         Visualization.EditingTimeWindowVisualization(at_video, cap, video_index_range, full_gaze_at, full_gaze_data, gaze_index_range, CPM, filename)
     cap.release()
