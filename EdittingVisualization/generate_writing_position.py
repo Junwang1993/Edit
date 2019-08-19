@@ -7,9 +7,8 @@ import ConvertTimeDomainToVideo
 import DataPreprocessing
 import Editting
 import Visualization
-import FeaturesAroundEditing
+import GetTextArea
 from pathlib import Path
-
 # functions
 def getAllFile(age_wanted):
     fileDirs = []
@@ -32,10 +31,28 @@ def getAllFile(age_wanted):
             subjectID = subjectID+1
     return fileDirs, fileMarks
 
-def refineKeyboardInfoInGivenAtInterval(ats, info_types, keypressInfo):
+def getCursorPosition(at_wanted, ats_cursor, xs_cursor, ys_cursor, length = 1680.0, width = 1050.0):
+    # found index need to substract one
+    i = Time.Time().findPositionInTimeArray(at_wanted, ats_cursor)-1
+    # refine index
+    if i <0:
+        i = 0
+    if i >= len(ats_cursor):
+        i = len(ats_cursor)-1
+    # cursor position tuple
+    cursor_p = (xs_cursor[i], ys_cursor[i])
+    return cursor_p
+
+def getKeyboardInfoInGivenAtInterval(at_interval, ats, info_types, keypressInfo):
+    f_at = at_interval[0]
+    b_at = at_interval[1]
+    # determine the range in keyboard info list
+    f_index = Time.Time().findPositionInTimeArray(f_at, ats)-1
+    b_index = Time.Time().findPositionInTimeArray(b_at, ats)-1
+    # return info
     refine_ats = []
     refine_keypresses = []
-    for i in range(0, len(ats)):
+    for i in range(f_index, b_index+1):
         # checking type
         type = info_types[i]
         if type == 'KeyboardDown':
@@ -43,46 +60,25 @@ def refineKeyboardInfoInGivenAtInterval(ats, info_types, keypressInfo):
             refine_keypresses.append(keypressInfo[i])
     return refine_ats, refine_keypresses
 
-def fvsToArff(fileName, fvs, lbs, classmark, typeInstances):
-    # instances  -> list
-    # typeInstances -> string
-    numAttributes = len(fvs[0])
-    f = open(fileName, 'w')
-    f.write("@RELATION " + typeInstances + "\n")
-    for i in range(0, numAttributes):
-        f.write('@ATTRIBUTE attri' + str(i) + ' NUMERIC\n')
-    f.write('@ATTRIBUTE class ' + classmark + '\n')
-    f.write('@DATA\n')
-    for i in range(0, len(fvs)):
-        fv = fvs[i]
 
-        line = ""
-        for v in fv:
-            line += str(v)
-            line += ','
-        line+=lbs[i]
 
-        f.write(line)
-        f.write('\n')
-    f.closed
 
-# arg
-arg_regenerate_editing_interval = True
 # main function
 length = 1680.0
 width = 1050.0
 fileDirs, fileMarks = getAllFile([1]) # only extract college data
 # iterate all task
 for i_file in range(0, len(fileDirs)):
-    #print(str(i))
+    print(str(i_file))
     dir = fileDirs[i_file]
+    fileNeedToFind = dir+'writingPosition.csv'
+    my_file = Path(fileNeedToFind)
+    if my_file.is_file():
+        continue
     # get csv file
-    if len(glob(dir + '*gaze*.csv'))==0:
+    if len(glob(dir + '*gaze*.csv')) == 0:
         continue
     csv1 = CsvReader.CsvReader(glob(dir + '*gaze*.csv')[0])
-
-    if len(glob(dir + '*window*.csv'))==0:
-        continue
     csv2 = CsvReader.CsvReader(glob(dir + 'window*.csv')[0])
     # extract gaze data
     data_gaze = csv1.getData([0, 2, 3], hasHeader=1, needHandleNegativeOneIndex=[2, 3], flag=True)
@@ -106,7 +102,7 @@ for i_file in range(0, len(fileDirs)):
     full_gaze_at, full_gaze_data = ConvertTimeDomainToVideo.ConvertTimeDomainToVideo().InsertInterpolateListBack(at_video[start_v:end_v],at_gaze,data_gaze_videoTimeDomain,data_gaze[1:len(data_gaze)])
 
     # get cursor position info
-    csv3 = CsvReader.CsvReader(glob(dir + '*newCursor*.csv')[0])
+    csv3 = CsvReader.CsvReader(glob(dir + '*cursor*.csv')[0])
     data_cursor = csv3.getData([0, 1, 2], hasHeader=1, needHandleNegativeOneIndex=[], flag=True)
     ats_cursor = [Time.Time(at) for at in data_cursor[0]]
     xs_cursor = [float(x) for x in data_cursor[1]]
@@ -114,64 +110,38 @@ for i_file in range(0, len(fileDirs)):
     # read keyboard info
     csv4 = CsvReader.CsvReader(glob(dir + '*mouse*.csv')[0])
     data_keyboard = csv4.getData([0, 2, 3], hasHeader=1, needHandleNegativeOneIndex=[], flag=True)
-    ats_keyboard = [Time.Time(at) for at in data_keyboard[0]]
+    ats_cursor = [Time.Time(at) for at in data_keyboard[0]]
     info_types = data_keyboard[1]
     keypressInfo = data_keyboard[2]
-    # refine
-    refine_ats_keypresses, refine_keypresses_info = refineKeyboardInfoInGivenAtInterval(ats_keyboard, info_types, keypressInfo)
-    # refine cursor info
-    i_cursor_start = Time.Time().findPositionInTimeArray(refine_ats_keypresses[1],ats_cursor)
-    ats_cursor = ats_cursor[i_cursor_start:]
-    xs_cursor = xs_cursor[i_cursor_start:]
-    ys_cursor = ys_cursor[i_cursor_start:]
-    # read writing position info
-    if len(glob(dir+'*writing*.csv')) ==0:
-        continue
-    csv5 = CsvReader.CsvReader(glob(dir+'*writing*.csv')[0])
-
-    data_wp = csv5.getData([0,1,2], hasHeader=0, needHandleNegativeOneIndex=[], flag=True)
-    ats_wp = [Time.Time(at) for at in data_wp[0]]
-    xs_wp = [float(at) for at in data_wp[1]]
-    ys_wp = [float(at) for at in data_wp[2]]
-    WPM = Editting.WritingPositionModule(ats_wp,xs_wp,ys_wp)
-    CPM = Editting.CursorPositionModule(ats_cursor, xs_cursor, ys_cursor)
-    # extracting editing interval
-    editingFileName = dir + 'editing_interval.csv'
-    editing_file = Path(editingFileName)
-    isExist_ef = editing_file.is_file()
-    if isExist_ef and (arg_regenerate_editing_interval==False):
-        editingInterval, editingType = Editting.readEditingIntervalsCSV(editingFileName)
-    else:
-        EdittingModule = Editting.EditingModule(ats_cursor, xs_cursor, ys_cursor, WPM)
-        EdittingModule.generate2CSV(dir + 'editing_interval.csv')
-        editingInterval = EdittingModule.FullEdittingIntervals
-        editingType = EdittingModule.editingTypes
-    # fv file name
-    fvfileName = 'C:\\Users\\csjunwang\\Desktop\\EditingResult\\efv.arff'
-
-    ##-------------------------------------------------------------
-    # all dataare prepared above
-    # feature around edit point module
-    FVS = []
-    LBS = []
-    FAE = FeaturesAroundEditing.FeaturesAheadEditingPointModule(
-        ats_gaze = at_gaze,
-        xs_gaze = [float(n)*1680 for n in data_gaze[1]],
-        ys_gaze = [float(n)*1050 for n in data_gaze[2]],
-        ats_kb  = refine_ats_keypresses,
-        keyInfo_kb = refine_keypresses_info,
-        editingAtRange = editingInterval,
-        editingType = editingType,
-        caretATs = ats_cursor,
-        caretXs = xs_cursor,
-        caretYs = ys_cursor,
-        writingPositionATs = ats_wp,
-        writingPositionXs = xs_wp,
-        writingPositionYs = ys_wp
-    )
-    FVS.extend(FAE.fvs)
-    LBS.extend(FAE.lbs)
-
-fvsToArff(fvfileName, FVS, LBS, '{d, i}', 'edit')
-
-
+    # read video
+    cap = cv2.VideoCapture(glob(dir + 'window*.avi')[0])
+    # setting start point
+    cap.set(1, start_v)
+    # iterate frames
+    # holders
+    ats = []
+    xs = []
+    ys = []
+    for i in range(start_v, end_v):
+        print('Frame: '+str(i))
+        _, frame = cap.read()
+        textboxs = GetTextArea.detectPassageArea(frame)
+        # append at
+        ats.append(at_video[i])
+        if textboxs[1] != [0,0,0,0]:
+            cv2.circle(frame, (int(textboxs[1][0]), int(15+0.5*(textboxs[1][2]+textboxs[1][3]))), 5, (0, 0, 255), -1)
+            xs.append(int(textboxs[1][0]))
+            ys.append(int(15+0.5*(textboxs[1][2]+textboxs[1][3])))
+        else:
+            cv2.circle(frame, (int(textboxs[0][1]), int(0.5 * (textboxs[0][2] + textboxs[0][3]))), 5, (0, 0, 255),-1)
+            xs.append(int(textboxs[0][1]))
+            ys.append(int(0.5 * (textboxs[0][2] + textboxs[0][3])))
+        # cv2.imshow('frame', frame)
+        # if cv2.waitKey(100) & 0xFF == ord('q'):
+        #     break
+    f=open(dir+'writingPosition.csv','w')
+    for i_wp in range(0, len(ats)):
+        line = Time.Time().toString(ats[i_wp])+','+str(xs[i_wp])+','+str(ys[i_wp])
+        f.write(line)
+        f.write('\n')
+    f.close()

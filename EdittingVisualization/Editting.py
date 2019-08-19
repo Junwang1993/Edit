@@ -15,7 +15,7 @@ def getCursorPosition(at_wanted, ats_cursor, xs_cursor, ys_cursor, length = 1680
     cursor_p = (xs_cursor[i], ys_cursor[i])
     return cursor_p
 
-def readEditingIntervalsCSV(self, fileName):
+def readEditingIntervalsCSV(fileName):
     editingInterval = []
     editingType = []
     with open(fileName, 'r') as f:
@@ -45,7 +45,7 @@ class CaretPositionModule(object):
         return (self.xs_c[index_c], self.ys_c[index_c])
 
     def getCurrentSeriesCaretPosition(self, at_check, num_following = 2):
-        index_found = self.getCurrentCaretPosition(at_check)
+        index_found = self.getCurrentCaretIndex(at_check)
         index_b = index_found + num_following
         # refine index
         refine_index = []
@@ -61,7 +61,13 @@ class CaretPositionModule(object):
             refine_positions.append((self.xs_c[position_index],self.ys_c[position_index]))
         return refine_positions
 
-
+    def getCurrentCaretIndex(self, at_check):
+        index_c = Time.Time().findPositionInTimeArray(at_check, self.ats_c) - 1
+        if index_c < 0:
+            index_c = 0
+        if index_c >= len(self.ats_c):
+            index_c = len(self.ats_c) - 1
+        return index_c
 
 
 
@@ -137,6 +143,7 @@ class EditingModule(object):
 
         # start to iterate
         for i in range(1, len(self.ats_cursor)):
+            print(str(i))
             next_at = self.ats_cursor[i]
             next_caret_x = self.xs_cursor[i]
             next_caret_y = self.ys_cursor[i]
@@ -200,7 +207,7 @@ class EditingModule(object):
 
         print('d')
 
-    def AreTwoPointsClose(self, p1, p2, thres_x=10, thres_y=10):
+    def AreTwoPointsClose(self, p1, p2, thres_x=30, thres_y=20):
         # true is close
         # false is not close
         if abs(p1[0]-p2[0])<=thres_x and abs(p1[1]-p2[1])<=thres_y:
@@ -223,7 +230,7 @@ class EditingModule(object):
                 caretPs = self.cpm.getCurrentSeriesCaretPosition(tuple[-1], num_following=2)
                 flag_close = True
                 for caretP in caretPs:
-                    flag = self.AreTwoPointsClose(cwP, caretPs)
+                    flag = self.AreTwoPointsClose(cwP, caretP)
                     if flag == False:
                         flag_close = False
                         break
@@ -233,10 +240,10 @@ class EditingModule(object):
                     self.editingTypes.append('Deletion')
 
     def generate2CSV(self, fileName):
-        f = open(fileName, w)
+        f = open(fileName, 'w')
         for i in range(0, len(self.FullEdittingIntervals)):
             interval = self.FullEdittingIntervals[i]
-            type = self.FullEdittingTypingPostions[i]
+            type = self.editingTypes[i]
             line = ''
             line += Time.Time().toString(interval[0])
             line += ','

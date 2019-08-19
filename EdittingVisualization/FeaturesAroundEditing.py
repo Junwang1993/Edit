@@ -9,7 +9,7 @@ def ConvertATs2RTs(ats):
     head = ats[0]
     for i in range(0, len(ats)):
         rts.append(Time.Time().substractionBetweenTwoTime(head, ats[i]))
-    return ats
+    return rts
 
 
 def Refined_find_index_in_ATs(at, ats, lastFoundIndex):
@@ -247,7 +247,7 @@ class FeaturesAheadEditingPointModule(object):
     def process(self):
         self.fvs = []
         self.lbs = []
-        for i in range(self.editingIndexRange):
+        for i in range(0, len(self.editingIndexRange)):
             ei = self.editingIndexRange[i]
             # extracting features
             fvl = self.extractFixationFeaturesList(
@@ -295,7 +295,7 @@ class FeaturesAheadEditingPointModule(object):
             one_edit_at_range = self.editingAtRange[i]
             editing_at_moment = one_edit_at_range[0] # at moment that start editing (start moving back)
             # feature extract range
-            at_f = Time.Time().substractByNms(one_edit_at_range, self.deltaT)
+            at_f = Time.Time().substractByNms(editing_at_moment, self.deltaT)
             at_b = editing_at_moment
             # find gaze index
             f_full_gaze = Refined_find_index_in_ATs(at_f, self.ats_gaze, lastFoundIndex_gaze)
@@ -338,6 +338,8 @@ class FeaturesAheadEditingPointModule(object):
             # get current caret position
             caretP = Editting.getCursorPosition(fixation_at, self.caretATs, self.caretXs, self.caretYs)
             # fixation duration
+            if f_b_i >= len(rts_inRange_gaze):
+                f_b_i = len(rts_inRange_gaze)-1
             f_dur = rts_inRange_gaze[f_b_i] - rts_inRange_gaze[f_f_i]
             # determine fixation ---local position---
             relativeP_type, distance_type, dx2caret, dy2caret = self.distanceBetweenCaret((fixation_x, fixation_y), caretP)
@@ -354,35 +356,90 @@ class FeaturesAheadEditingPointModule(object):
         fv = []
         # dur related features
         fv_names.append('dur_mean')
-        fv.append(np.array(self.fixation_fvl['allFixationDur']).mean())
+        if len(self.fixation_fvl['allFixationDur'])!=0:
+            fv.append(np.array(self.fixation_fvl['allFixationDur']).mean())
+        else:
+            fv.append(0)
+
         fv_names.append('dur_std')
-        fv.append(np.array(self.fixation_fvl['allFixationDur']).std())
+        if len(self.fixation_fvl['allFixationDur']) != 0:
+            fv.append(np.array(self.fixation_fvl['allFixationDur']).std())
+        else:
+            fv.append(0)
+
         fv_names.append('dur_85')
-        fv.append(np.percentile(np.array(self.fixation_fvl['allFixationDur']), 85))
+        if len(self.fixation_fvl['allFixationDur']) != 0:
+            fv.append(np.percentile(np.array(self.fixation_fvl['allFixationDur']), 85))
+        else:
+            fv.append(0)
+
         fv_names.append('dur_15')
-        fv.append(np.percentile(np.array(self.fixation_fvl['allFixationDur']), 15))
+        if len(self.fixation_fvl['allFixationDur']) != 0:
+            fv.append(np.percentile(np.array(self.fixation_fvl['allFixationDur']), 15))
+        else:
+            fv.append(0)
+
         # distance-x
         fv_names.append('dist_x_mean')
-        fv.append(np.array(self.fixation_fvl['d2c_x']).mean())
+        if len(self.fixation_fvl['d2c_x']) != 0:
+            fv.append(np.array(self.fixation_fvl['d2c_x']).mean())
+        else:
+            fv.append(0)
+
         fv_names.append('dist_x_std')
-        fv.append(np.array(self.fixation_fvl['d2c_x']).std())
+        if len(self.fixation_fvl['d2c_x']) != 0:
+            fv.append(np.array(self.fixation_fvl['d2c_x']).std())
+        else:
+            fv.append(0)
+
         fv_names.append('dist_x_85')
-        fv.append(np.percentile(np.array(self.fixation_fvl['d2c_x']), 85))
+        if len(self.fixation_fvl['d2c_x']) != 0:
+            fv.append(np.percentile(np.array(self.fixation_fvl['d2c_x']), 85))
+        else:
+            fv.append(0)
+
         fv_names.append('dist_x_15')
-        fv.append(np.percentile(np.array(self.fixation_fvl['d2c_x']), 15))
+        if len(self.fixation_fvl['d2c_x']) != 0:
+            fv.append(np.percentile(np.array(self.fixation_fvl['d2c_x']), 15))
+        else:
+            fv.append(0)
+
         # distance-y
         fv_names.append('dist_y_mean')
-        fv.append(np.array(self.fixation_fvl['d2c_y']).mean())
+        if len(self.fixation_fvl['d2c_y']) != 0:
+            fv.append(np.array(self.fixation_fvl['d2c_y']).mean())
+        else:
+            fv.append(0)
+
         fv_names.append('dist_y_std')
-        fv.append(np.array(self.fixation_fvl['d2c_y']).std())
+        if len(self.fixation_fvl['d2c_y']) != 0:
+            fv.append(np.array(self.fixation_fvl['d2c_y']).std())
+        else:
+            fv.append(0)
+
         fv_names.append('dist_y_85')
-        fv.append(np.percentile(np.array(self.fixation_fvl['d2c_y']), 85))
+        if len(self.fixation_fvl['d2c_y']) != 0:
+            fv.append(np.percentile(np.array(self.fixation_fvl['d2c_y']), 85))
+        else:
+            fv.append(0)
+
         fv_names.append('dist_y_15')
-        fv.append(np.percentile(np.array(self.fixation_fvl['d2c_y']), 15))
+        if len(self.fixation_fvl['d2c_y']) != 0:
+            fv.append(np.percentile(np.array(self.fixation_fvl['d2c_y']), 15))
+        else:
+            fv.append(0)
+
         # type 1 ratio
         fv_names.append('behind_ratio')
-        fv.append(float(self.fixation_fvl['allFixationPositionType1'].count('behind'))/float(len(self.fixation_fvl['allFixationPositionType1'])))
+        if len(self.fixation_fvl['allFixationPositionType1']) != 0:
+            fv.append(float(self.fixation_fvl['allFixationPositionType1'].count('behind'))/float(len(self.fixation_fvl['allFixationPositionType1'])))
+        else:
+            fv.append(0)
+
         # type 2 ratio
         fv_names.append('distal_ratio')
-        fv.append(float(self.fixation_fvl['allFixationPositionType2'].count('distal'))/float(len(self.fixation_fvl['allFixationPositionType2'])))
+        if len(self.fixation_fvl['allFixationPositionType2']) != 0:
+            fv.append(float(self.fixation_fvl['allFixationPositionType2'].count('distal'))/float(len(self.fixation_fvl['allFixationPositionType2'])))
+        else:
+            fv.append(0)
         return fv, fv_names
