@@ -249,8 +249,8 @@ class FeaturesAheadEditingPointModule(object):
         self.lbs = []
         for i in range(0, len(self.editingIndexRange)):
             ei = self.editingIndexRange[i]
-            # extracting features
-            fvl = self.extractFixationFeaturesList(
+            # extracting fixation features
+            self.extractFixationFeaturesList(
                 ats_inRange_gaze = self.ats_gaze[ei.f_full_gaze:ei.b_full_gaze],
                 xs_inRange_gaze = self.xs_gaze[ei.f_full_gaze:ei.b_full_gaze],
                 ys_inRange_gaze = self.ys_gaze[ei.f_full_gaze:ei.b_full_gaze],
@@ -258,7 +258,27 @@ class FeaturesAheadEditingPointModule(object):
                 xs_inRange_cursor = self.caretXs[ei.f_full_gaze:ei.b_full_gaze],
                 ys_inRange_cursor = self.caretYs[ei.f_full_gaze:ei.b_full_gaze]
             )
-            fv, self.fv_name = self.extractFixationFeaturesVector()
+            self.extractTextFeaturesList(
+                ats_inRange_kb = self.ats_kb[ei.f_full_kb : ei.b_full_kb],
+                info_inRange_kb = self.keyInfo_kb[ei.f_full_kb : ei.b_full_kb],
+                full_at_kb = self.ats_kb,
+                full_Info_kb = self.keyInfo_kb,
+                start_check_reverse = ei.b_full_kb
+            )
+
+            fv = []
+            self.fv_name = []
+
+            # fixation
+            fv_fix, fv_name_fix = self.extractFixationFeaturesVector()
+            # text
+            fv_text, fv_name_text = self.extractTextFeaturesVector()
+            # extend
+            fv.extend(fv_fix)
+            fv.extend(fv_text)
+            self.fv_name.extend(fv_name_fix)
+            self.fv_name.extend(fv_name_text)
+            # append 2 fvs
             self.fvs.append(fv)
             self.lbs.append(self.editingType[i])
 
@@ -312,6 +332,44 @@ class FeaturesAheadEditingPointModule(object):
                 b_full_kb=b_full_kb
             )
             self.editingIndexRange.append(ei)
+
+    def extractTextFeaturesList(self, ats_inRange_kb, info_inRange_kb, full_at_kb, full_Info_kb, start_check_reverse):
+        # just for initialization
+        self.kb_fv = {
+            'num_keystrokes' : None,
+            'close_stop_character' : None,
+            'close_stop_time': None
+        }
+        stop_characters = {
+            #todo
+        }
+        # number keystrokes
+        self.kb_fv['num_keystrokes'] = len(info_inRange_kb)
+        # close stop character
+        found_closest_stop = False
+        numCheck = 0
+        for reverse_i in range(start_check_reverse, 0):
+            if full_Info_kb[reverse_i] in stop_characters:
+                self.kb_fv['close_stop_character'] = numCheck
+                break
+            numCheck += 1
+        if found_closest_stop == False:
+            self.kb_fv['close_stop_character'] = -1
+        else:
+            # close stop time
+            self.kb_fv['close_stop_time'] = Time.Time().substractionBetweenTwoTime(
+                full_at_kb[reverse_i],
+                full_at_kb[start_check_reverse]
+            )
+
+    def extractTextFeaturesVector(self):
+        fv = []
+        fv_name = []
+        for fvn in self.kb_fv:
+            fv_name.append(fvn)
+            fv.append(self.kb_fv[fvn])
+        return fv, fv_name
+
 
     def extractFixationFeaturesList(self, ats_inRange_gaze, xs_inRange_gaze, ys_inRange_gaze,
                                 ats_inRange_cursor, xs_inRange_cursor, ys_inRange_cursor):
