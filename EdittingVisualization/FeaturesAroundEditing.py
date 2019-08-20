@@ -532,6 +532,111 @@ class FeaturesAheadEditingPointModule(object):
             fv.append(0)
         return fv, fv_names
 
+class Trajectory(object):
+    def __init__(self, relative_rts, relative_xs, relative_ys):
+        # relative rts => 0 is the time point start editing
+        # relatice ps => (0, 0) is the cusor point
+        self.relative_rts = relative_rts
+        self.relative_xs = relative_xs
+        self.relative_ys = relative_ys
+    def draw(self):
+
+
+class GazeTrajectoryAheadEditingPoint(object):
+    def __init__(self, ats_gaze, xs_gaze, ys_gaze, ats_kb, keyInfo_kb, editingAtRange, editingType,caretATs, caretXs, caretYs, writingPositionATs, writingPositionXs, writingPositionYs, deltaT = 5000):
+        # gaze
+        self.ats_gaze = ats_gaze
+        self.xs_gaze = xs_gaze
+        self.ys_gaze = ys_gaze
+        # keyboard
+        self.ats_kb = ats_kb
+        self.keyInfo_kb = keyInfo_kb
+        # editing
+        self.editingAtRange = editingAtRange
+        self.editingType = editingType
+        # caret
+        self.caretATs = caretATs
+        self.caretXs = caretXs
+        self.caretYs = caretYs
+        # writing position
+        self.writingPositionATs = writingPositionATs
+        self.writingPositionXs = writingPositionXs
+        self.writingPositionYs = writingPositionYs
+        # delta
+        self.deltaT = deltaT
+
+    def interpolate_position_version(self, at_want, ats, xs, ys):
+        idx = Time.Time().findPositionInTimeArray(at_want, ats)
+        if idx == 0:
+            return (xs[0], ys[0])
+        if idx >= len(ats):
+            return (xs[-1], ys[-1])
+        r_diff = Time.Time().substractionBetweenTwoTime(ats[idx-1], at_want)
+        f_diff = Time.Time().substractionBetweenTwoTime(ats[idx-1], ats[idx])
+        x = r_diff*((xs[idx]-xs[idx-1])/float(f_diff))
+        y = r_diff*((ys[idx]-ys[idx-1])/float(f_diff))
+        return (x,y)
+
+    def getCaretPsAlongGazeAxis(self,caret_ats, caret_xs, caret_ys, gaze_ats):
+        caret_xs_along_gaze_axis = []
+        caret_ys_along_gaze_axis = []
+        for i in range(0, len(gaze_ats)):
+            g_at = gaze_ats[i]
+            p = self.interpolate_position_version(g_at, caret_ats, caret_xs, caret_ys)
+            caret_xs_along_gaze_axis.append(p[0])
+            caret_ys_along_gaze_axis.append(p[1])
+        return caret_xs_along_gaze_axis, caret_ys_along_gaze_axis
+
+    def preprocess_extract_editingRangeIndex(self):
+        self.editingIndexRange = []
+        # iterate all editing interval
+        # iterating parameters
+        lastFoundIndex_gaze = 0
+        lastFoundIndex_kb = 0
+        for i in range(0, len(self.editingAtRange)):
+            one_edit_at_range = self.editingAtRange[i]
+            editing_at_moment = one_edit_at_range[0] # at moment that start editing (start moving back)
+            # feature extract range
+            at_f = Time.Time().substractByNms(editing_at_moment, self.deltaT)
+            at_b = editing_at_moment
+            # find gaze index
+            f_full_gaze = Refined_find_index_in_ATs(at_f, self.ats_gaze, lastFoundIndex_gaze)
+            b_full_gaze = Refined_find_index_in_ATs(at_b, self.ats_gaze, lastFoundIndex_gaze)
+            lastFoundIndex_gaze = f_full_gaze
+            # find keyboard index
+            f_full_kb = Refined_find_index_in_ATs(at_f, self.ats_kb, lastFoundIndex_kb)
+            b_full_kb = Refined_find_index_in_ATs(at_b, self.ats_kb, lastFoundIndex_kb)
+            lastFoundIndex_kb = f_full_kb
+            ei = EditingIndex(
+                f_full_gaze=f_full_gaze,
+                f_full_kb=f_full_kb,
+                b_full_gaze=b_full_gaze,
+                b_full_kb=b_full_kb
+            )
+            self.editingIndexRange.append(ei)
+
+    def fetchGazeTrajectory(self):
+        self.trajs = []
+        # iterate each ei
+        for i in range(0, len(self.editingIndexRange)):
+            ei = self.editingIndexRange[i]
+            ei_ats_gaze = self.ats_gaze[ei.f_full_gaze:ei.b_full_gaze]
+            ei_xs_gaze = self.xs_gaze[ei.f_full_gaze:ei.b_full_gaze]
+            ei_ys_gaze = self.ys_gaze[ei.f_full_gaze:ei.b_full_gaze]
+            # build relative rts
+            ei_rts = Time.Time().generateRelativeTimeListFromAbsolut(ei_ats_gaze)
+            ei_rrts = np.array(ei_rts)-ei_rts[-1]
+            # from np data format to list
+            ei_rrts = ei_rrts.tolist()
+            caret_xs, caret_ys = self.getCaretPsAlongGazeAxis(self.caretATs, self.caretXs, self.caretYs, ei_ats_gaze)
+            relative_xs = (np.array(ei_xs_gaze) - np.array(caret_xs)).tolist()
+            relative_ys = (np.array(ei_ys_gaze) - np.array(caret_ys)).tolist()
+            traj = GazeTrajectoryAheadEditingPoint(ei_rrts, relative_xs, relative_ys)
+            self.trajs.append(traj)
+
+
+
+
 class StatisticalOverallOfEditing(object):
 
     def __init__(self):
