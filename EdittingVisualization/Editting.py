@@ -44,8 +44,8 @@ class CaretPositionModule(object):
             index_c = len(self.ats_c)-1
         return (self.xs_c[index_c], self.ys_c[index_c])
 
-    def getCurrentSeriesCaretPosition(self, at_check, num_following = 2):
-        index_found = self.getCurrentCaretIndex(at_check)
+    def getCurrentSeriesCaretPosition(self, at_check, num_aheading = 2,num_following = 2):
+        index_found = self.getCurrentCaretIndex(at_check)-num_aheading
         index_b = index_found + num_following
         # refine index
         refine_index = []
@@ -207,7 +207,7 @@ class EditingModule(object):
 
         print('d')
 
-    def AreTwoPointsClose(self, p1, p2, thres_x=30, thres_y=20):
+    def AreTwoPointsClose(self, p1, p2, thres_x=100, thres_y=100):
         # true is close
         # false is not close
         if abs(p1[0]-p2[0])<=thres_x and abs(p1[1]-p2[1])<=thres_y:
@@ -227,7 +227,7 @@ class EditingModule(object):
                 # check writing position...
                 cwP = self.wpm.getCurrentWritingPlace(tuple[-1])
                 # ckeck series of caret positions
-                caretPs = self.cpm.getCurrentSeriesCaretPosition(tuple[-1], num_following=2)
+                caretPs = self.cpm.getCurrentSeriesCaretPosition(tuple[-1], num_aheading = 2,num_following=2)
                 flag_close = True
                 for caretP in caretPs:
                     flag = self.AreTwoPointsClose(cwP, caretP)

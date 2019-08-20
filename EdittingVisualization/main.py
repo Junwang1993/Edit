@@ -49,7 +49,7 @@ length = 1680.0
 width = 1050.0
 fileDirs, fileMarks = getAllFile([1]) # only extract college data
 # iterate all task
-for i_file in range(7, len(fileDirs)):
+for i_file in range(1, len(fileDirs)):
     #print(str(i))
     dir = fileDirs[i_file]
     # get csv file

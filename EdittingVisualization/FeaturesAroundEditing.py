@@ -2,6 +2,7 @@ import Time
 import FixationDetection
 import numpy as np
 import Editting
+from scipy import stats
 
 # helper function
 def ConvertATs2RTs(ats):
@@ -43,7 +44,6 @@ class AheadEditingIndex(object):
         self.editingIndex_gaze = editingIndex_kb
         self.startIndex_kb = startIndex_gaze
         self.editingIndex_kb = editingIndex_kb
-
 
 class FeaturesNearEditingPointModule(object):
     def __init__(self, ats_gaze, xs_gaze, ys_gaze, ats_kb, keyInfo_kb, editingAtRange, caretATs, caretXs, caretYs, writingPositionATs, writingPositionXs, writingPositionYs, f_delta_at=500, b_delta_at=500):
@@ -219,7 +219,7 @@ class FeaturesNearEditingPointModule(object):
 
 class FeaturesAheadEditingPointModule(object):
 
-    def __init__(self, ats_gaze, xs_gaze, ys_gaze, ats_kb, keyInfo_kb, editingAtRange, editingType,caretATs, caretXs, caretYs, writingPositionATs, writingPositionXs, writingPositionYs, deltaT = 1000):
+    def __init__(self, ats_gaze, xs_gaze, ys_gaze, ats_kb, keyInfo_kb, editingAtRange, editingType,caretATs, caretXs, caretYs, writingPositionATs, writingPositionXs, writingPositionYs, deltaT = 5000):
         # gaze
         self.ats_gaze = ats_gaze
         self.xs_gaze = xs_gaze
@@ -256,7 +256,8 @@ class FeaturesAheadEditingPointModule(object):
                 ys_inRange_gaze = self.ys_gaze[ei.f_full_gaze:ei.b_full_gaze],
                 ats_inRange_cursor = self.caretATs[ei.f_full_gaze:ei.b_full_gaze],
                 xs_inRange_cursor = self.caretXs[ei.f_full_gaze:ei.b_full_gaze],
-                ys_inRange_cursor = self.caretYs[ei.f_full_gaze:ei.b_full_gaze]
+                ys_inRange_cursor = self.caretYs[ei.f_full_gaze:ei.b_full_gaze],
+                type = self.editingType[i]
             )
             self.extractTextFeaturesList(
                 ats_inRange_kb = self.ats_kb[ei.f_full_kb : ei.b_full_kb],
@@ -333,6 +334,28 @@ class FeaturesAheadEditingPointModule(object):
             )
             self.editingIndexRange.append(ei)
 
+    def checkIsStopCharacters(self, full_info_kb, checkIndex):
+        # capture all the stop characters
+        stop_characters = {
+            '<',  # ,
+            '</?>',  # ?
+            '<.>>',  # .
+        }
+        half_stop_characters = {
+            '1'  # !
+        }
+        checkC =  full_info_kb[checkIndex]
+        if checkC in stop_characters:
+            return True
+        elif checkC in half_stop_characters:
+            # check one character before
+            if checkIndex == 0:
+                return False
+            if full_info_kb[checkIndex-1] == '<LSHIFT>' or full_info_kb[checkIndex-1] == '<RSHIFT>':
+                return True
+        else:
+            return False
+
     def extractTextFeaturesList(self, ats_inRange_kb, info_inRange_kb, full_at_kb, full_Info_kb, start_check_reverse):
         # just for initialization
         self.kb_fv = {
@@ -340,19 +363,22 @@ class FeaturesAheadEditingPointModule(object):
             'close_stop_character' : None,
             'close_stop_time': None
         }
-        stop_characters = {
-            #todo
-        }
+
+
         # number keystrokes
         self.kb_fv['num_keystrokes'] = len(info_inRange_kb)
         # close stop character
         found_closest_stop = False
         numCheck = 0
-        for reverse_i in range(start_check_reverse, 0):
-            if full_Info_kb[reverse_i] in stop_characters:
+        reverse_i = start_check_reverse
+        while reverse_i >=0:
+            #if full_Info_kb[reverse_i] in stop_characters:
+            if self.checkIsStopCharacters(full_Info_kb, reverse_i):
                 self.kb_fv['close_stop_character'] = numCheck
+                found_closest_stop = True
                 break
             numCheck += 1
+            reverse_i -= 1
         if found_closest_stop == False:
             self.kb_fv['close_stop_character'] = -1
         else:
@@ -362,6 +388,11 @@ class FeaturesAheadEditingPointModule(object):
                 full_at_kb[start_check_reverse]
             )
 
+        # refine
+        for name in self.kb_fv:
+            if self.kb_fv[name] == None:
+                self.kb_fv[name] = -1
+
     def extractTextFeaturesVector(self):
         fv = []
         fv_name = []
@@ -370,9 +401,8 @@ class FeaturesAheadEditingPointModule(object):
             fv.append(self.kb_fv[fvn])
         return fv, fv_name
 
-
     def extractFixationFeaturesList(self, ats_inRange_gaze, xs_inRange_gaze, ys_inRange_gaze,
-                                ats_inRange_cursor, xs_inRange_cursor, ys_inRange_cursor):
+                                ats_inRange_cursor, xs_inRange_cursor, ys_inRange_cursor, type):
         # initial holder
         self.fixation_fvl = {
             'allFixationDur': [],
@@ -501,3 +531,75 @@ class FeaturesAheadEditingPointModule(object):
         else:
             fv.append(0)
         return fv, fv_names
+
+class StatisticalOverallOfEditing(object):
+
+    def __init__(self):
+        # create some inner parameter
+        # capture num
+        self.totalNum_Editing = 0
+        self.totalNum_Insertion = 0
+        self.totalNum_Deletion = 0
+        # feature-insertion
+        self.insertion_features = {
+            'avg_dur': [],  'std_dur':[],
+            'avg_dx': [],   'std_dx':[],
+            'avg_dy': [],   'std_dy':[],
+            'ratio_distal':[],
+            'ratio_ahead':[]
+        }
+        # feature-deletion
+        self.deletion_features = {
+            'avg_dur': [], 'std_dur': [],
+            'avg_dx': [], 'std_dx': [],
+            'avg_dy': [], 'std_dy': [],
+            'ratio_distal': [],
+            'ratio_ahead': []
+        }
+
+    def addingEditingInstance(self, edit_type, fd):
+        self.totalNum_Editing += 1
+        # fd is the feature dict that is in the same form of inner-parameter
+        if edit_type == 'Insertion':
+            self.totalNum_Insertion += 1
+            for fn in fd:
+                self.insertion_features[fn].append(fd[fn])
+        else:
+            self.totalNum_Deletion += 1
+            for fn in fd:
+                self.deletion_features[fn].append(fd[fn])
+
+    def computeTTest(self):
+        self.insertion_mean = {}
+        self.deletion_mean = {}
+        self.ttestResult = {}
+        for fn in self.insertion_features:
+            insertion_vs = self.insertion_features[fn]
+            deletion_vs = self.deletion_features[fn]
+            _, ttest_result = stats.ttest_ind(rvs1, rvs2, equal_var=False)
+            self.ttestResult[fn] = ttest_result
+            self.insertion_mean[fn] = np.mean(np.array(insertion_vs))
+            self.deletion_mean[fn] = np.mean(np.array(deletion_vs))
+
+    def generate2CSV(self, fileName):
+        f = open(fileName, 'w')
+        for fn in self.insertion_mean:
+            # build print line
+            line = ''
+            line += fn
+            line += ','
+            line += 'Deletion_mean:'
+            line += ','
+            line += str(self.deletion_mean[fn])
+            line += ','
+            line += 'Insertion_mean:'
+            line += ','
+            line += str(self.insertion_mean[fn])
+            line += ','
+            line += 'ttest:'
+            line += str(self.ttestResult[fn])
+            line += '\n'
+            f.write(line)
+        f.close()
+
+

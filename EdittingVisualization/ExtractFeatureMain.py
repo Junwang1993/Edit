@@ -65,7 +65,8 @@ def fvsToArff(fileName, fvs, lbs, classmark, typeInstances):
         f.write(line)
         f.write('\n')
     f.closed
-
+FVS = []
+LBS = []
 # arg
 arg_regenerate_editing_interval = True
 # main function
@@ -152,8 +153,7 @@ for i_file in range(0, len(fileDirs)):
     ##-------------------------------------------------------------
     # all dataare prepared above
     # feature around edit point module
-    FVS = []
-    LBS = []
+
     FAE = FeaturesAroundEditing.FeaturesAheadEditingPointModule(
         ats_gaze = at_gaze,
         xs_gaze = [float(n)*1680 for n in data_gaze[1]],
