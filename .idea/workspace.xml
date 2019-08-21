@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BookmarkManager">
+    <bookmark url="file://$PROJECT_DIR$/EdittingVisualization/Editting.py" line="229" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="db8759d2-52fd-4cb1-a9e0-e7ffbf59d07f" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -13,8 +16,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/EdittingVisualization/test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="74">
-              <caret line="69" column="21" selection-start-line="69" selection-start-column="21" selection-end-line="69" selection-end-column="21" />
+            <state>
+              <caret line="68" column="18" selection-start-line="68" selection-start-column="18" selection-end-line="68" selection-end-column="18" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -23,10 +26,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/EdittingVisualization/FindTextCursor.py">
+        <entry file="file://$PROJECT_DIR$/EdittingVisualization/generate_writing_position.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="554">
-              <caret line="76" column="16" selection-start-line="76" selection-start-column="16" selection-end-line="76" selection-end-column="16" />
+            <state relative-caret-position="-9">
+              <caret line="125" column="31" selection-start-line="125" selection-start-column="31" selection-end-line="125" selection-end-column="31" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -35,27 +38,37 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/EdittingVisualization/main.py">
+        <entry file="file://$PROJECT_DIR$/EdittingVisualization/ExtractFeatureMain.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="175">
-              <caret line="112" column="33" lean-forward="true" selection-start-line="112" selection-start-column="33" selection-end-line="112" selection-end-column="33" />
+            <state relative-caret-position="333">
+              <caret line="156" column="46" selection-start-line="156" selection-start-column="46" selection-end-line="156" selection-end-column="46" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
-                <element signature="e#220#970#0" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/EdittingVisualization/main.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="330">
+              <caret line="51" column="21" selection-start-line="51" selection-start-column="21" selection-end-line="51" selection-end-column="21" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/EdittingVisualization/Editting.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="471">
-              <caret line="170" selection-start-line="170" selection-end-line="170" />
+            <state relative-caret-position="854">
+              <caret line="209" column="63" selection-start-line="209" selection-start-column="63" selection-end-line="209" selection-end-column="63" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
                 <element signature="e#137#484#0" />
-                <element signature="e#1135#1677#0" />
               </folding>
             </state>
           </provider>
@@ -64,12 +77,36 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/EdittingVisualization/FeaturesAroundEditing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="10290">
-              <caret line="364" column="27" selection-start-line="364" selection-start-column="27" selection-end-line="364" selection-end-column="27" />
+            <state relative-caret-position="840">
+              <caret line="46" lean-forward="true" selection-start-line="46" selection-end-line="46" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
-                <element signature="e#10190#10876#0" />
+                <element signature="e#537#1157#0" />
+                <element signature="e#791#1157#0" />
+                <element signature="e#1196#1471#0" />
+                <element signature="e#1524#9255#0" />
+                <element signature="e#1734#2388#0" />
+                <element signature="e#2450#4758#0" />
+                <element signature="e#4823#5201#0" />
+                <element signature="e#5302#5988#0" />
+                <element signature="e#9309#21471#0" />
+                <element signature="e#11960#12646#0" />
+                <element signature="e#12708#13992#0" />
+                <element signature="e#14069#14474#0" />
+                <element signature="e#15123#15280#0" />
+                <element signature="e#15264#18536#0" />
+                <element signature="e#21767#21901#0" />
+                <element signature="e#22024#22267#0" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/EdittingVisualization/FixationDetection.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="19590">
+              <caret line="661" selection-start-line="661" selection-end-line="661" />
             </state>
           </provider>
         </entry>
@@ -77,8 +114,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/EdittingVisualization/Time.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="3" selection-start-line="3" selection-end-line="3" />
+            <state relative-caret-position="2160">
+              <caret line="72" selection-start-line="72" selection-end-line="72" />
             </state>
           </provider>
         </entry>
@@ -86,29 +123,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/EdittingVisualization/Visualization.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
-              <caret line="11" column="8" selection-start-line="11" selection-start-column="8" selection-end-line="11" selection-end-column="8" />
+            <state relative-caret-position="2130">
+              <caret line="76" selection-start-line="76" selection-end-line="77" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
                 <element signature="e#118#450#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/EdittingVisualization/GetTextArea.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3330">
-              <caret line="347" column="60" selection-start-line="347" selection-start-column="60" selection-end-line="347" selection-end-column="60" />
-              <folding>
-                <element signature="e#0#10#0" expanded="true" />
-                <element signature="e#174#928#0" />
-                <element signature="e#969#2249#0" />
-                <element signature="e#2291#3570#0" />
-                <element signature="e#3612#4186#0" />
-                <element signature="e#4222#7246#0" />
-                <element signature="e#7279#10125#0" />
               </folding>
             </state>
           </provider>
@@ -133,6 +152,8 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/EdittingVisualization/GetTextArea.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/EdittingVisualization/generate_writing_position.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/EdittingVisualization/ExtractFeatureMain.py" root0="SKIP_INSPECTION" />
     <setting file="file://$PROJECT_DIR$/EdittingVisualization/main.py" root0="SKIP_INSPECTION" />
     <setting file="file://$PROJECT_DIR$/EdittingVisualization/FeaturesAroundEditing.py" root0="SKIP_INSPECTION" />
     <setting file="file://$PROJECT_DIR$/EdittingVisualization/FindTextCursor.py" root0="SKIP_INSPECTION" />
@@ -148,10 +169,12 @@
         <option value="$PROJECT_DIR$/EdittingVisualization/Time.py" />
         <option value="$PROJECT_DIR$/EdittingVisualization/Visualization.py" />
         <option value="$PROJECT_DIR$/EdittingVisualization/test.py" />
-        <option value="$PROJECT_DIR$/EdittingVisualization/FeaturesAroundEditing.py" />
         <option value="$PROJECT_DIR$/EdittingVisualization/GetTextArea.py" />
         <option value="$PROJECT_DIR$/EdittingVisualization/FindTextCursor.py" />
+        <option value="$PROJECT_DIR$/EdittingVisualization/generate_writing_position.py" />
+        <option value="$PROJECT_DIR$/EdittingVisualization/ExtractFeatureMain.py" />
         <option value="$PROJECT_DIR$/EdittingVisualization/Editting.py" />
+        <option value="$PROJECT_DIR$/EdittingVisualization/FeaturesAroundEditing.py" />
         <option value="$PROJECT_DIR$/EdittingVisualization/main.py" />
       </list>
     </option>
@@ -166,7 +189,25 @@
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
-    <panes />
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="Edit" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Edit" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Edit" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Edit" type="462c0819:PsiDirectoryNode" />
+              <item name="EdittingVisualization" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+    </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
@@ -189,7 +230,28 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.ExtractFeatureMain">
+    <configuration name="ExtractFeatureMain" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Edit" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/EdittingVisualization" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/EdittingVisualization/ExtractFeatureMain.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="FindTextCursor" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Edit" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -203,6 +265,27 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/EdittingVisualization/FindTextCursor.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="generate_writing_position" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Edit" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/EdittingVisualization" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/EdittingVisualization/generate_writing_position.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -255,7 +338,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.ExtractFeatureMain" />
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.generate_writing_position" />
         <item itemvalue="Python.FindTextCursor" />
         <item itemvalue="Python.test" />
       </list>
@@ -295,13 +380,32 @@
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
     </layout>
+    <layout-to-restore>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24969843" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.19148937" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.35610303" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Version Control" order="7" />
+      <window_info anchor="bottom" id="Python Console" order="8" weight="0.32922733" />
+      <window_info anchor="bottom" id="Terminal" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+    </layout-to-restore>
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/EdittingVisualization/main.py</url>
-          <line>49</line>
+          <line>47</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -311,28 +415,23 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/EdittingVisualization/main.py</url>
-          <line>112</line>
-          <option name="timeStamp" value="45" />
+          <line>110</line>
+          <option name="timeStamp" value="83" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/EdittingVisualization/FeaturesAroundEditing.py</url>
-          <line>126</line>
-          <option name="timeStamp" value="65" />
+          <line>244</line>
+          <option name="timeStamp" value="89" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/EdittingVisualization/main.py</url>
-          <line>119</line>
-          <option name="timeStamp" value="71" />
+          <url>file://$PROJECT_DIR$/EdittingVisualization/FeaturesAroundEditing.py</url>
+          <line>261</line>
+          <option name="timeStamp" value="94" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/EdittingVisualization/Editting.py</url>
-          <line>148</line>
-          <option name="timeStamp" value="79" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/EdittingVisualization/Editting.py</url>
-          <line>61</line>
-          <option name="timeStamp" value="81" />
+          <url>file://$PROJECT_DIR$/EdittingVisualization/FeaturesAroundEditing.py</url>
+          <line>438</line>
+          <option name="timeStamp" value="97" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -388,17 +487,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/EdittingVisualization/Visualization.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="11" column="8" selection-start-line="11" selection-start-column="8" selection-end-line="11" selection-end-column="8" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-            <element signature="e#118#450#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/EdittingVisualization/GetTextArea.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3330">
@@ -415,21 +503,52 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/EdittingVisualization/FeaturesAroundEditing.py">
+    <entry file="file://$PROJECT_DIR$/EdittingVisualization/FindTextCursor.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="10290">
-          <caret line="364" column="27" selection-start-line="364" selection-start-column="27" selection-end-line="364" selection-end-column="27" />
+        <state relative-caret-position="-235">
+          <caret line="76" column="16" selection-start-line="76" selection-start-column="16" selection-end-line="76" selection-end-column="16" />
           <folding>
-            <element signature="e#0#11#0" expanded="true" />
-            <element signature="e#10190#10876#0" />
+            <element signature="e#0#10#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/EdittingVisualization/FindTextCursor.py">
+    <entry file="file://$USER_HOME$/AppData/Local/Continuum/anaconda3/envs/py3.5/Lib/codecs.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="554">
-          <caret line="76" column="16" selection-start-line="76" selection-start-column="16" selection-end-line="76" selection-end-column="16" />
+        <state relative-caret-position="9930">
+          <caret line="331" selection-start-line="331" selection-end-line="331" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/EdittingVisualization/FixationDetection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="19590">
+          <caret line="661" selection-start-line="661" selection-end-line="661" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/EdittingVisualization/Time.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2160">
+          <caret line="72" selection-start-line="72" selection-end-line="72" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/EdittingVisualization/Visualization.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2130">
+          <caret line="76" selection-start-line="76" selection-end-line="77" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#118#450#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/EdittingVisualization/generate_writing_position.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-9">
+          <caret line="125" column="31" selection-start-line="125" selection-start-column="31" selection-end-line="125" selection-end-column="31" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
@@ -438,40 +557,67 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/EdittingVisualization/test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="74">
-          <caret line="69" column="21" selection-start-line="69" selection-start-column="21" selection-end-line="69" selection-end-column="21" />
+        <state>
+          <caret line="68" column="18" selection-start-line="68" selection-start-column="18" selection-end-line="68" selection-end-column="18" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/EdittingVisualization/Editting.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="854">
+          <caret line="209" column="63" selection-start-line="209" selection-start-column="63" selection-end-line="209" selection-end-column="63" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#137#484#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/EdittingVisualization/ExtractFeatureMain.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="333">
+          <caret line="156" column="46" selection-start-line="156" selection-start-column="46" selection-end-line="156" selection-end-column="46" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/EdittingVisualization/FeaturesAroundEditing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="840">
+          <caret line="46" lean-forward="true" selection-start-line="46" selection-end-line="46" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+            <element signature="e#537#1157#0" />
+            <element signature="e#791#1157#0" />
+            <element signature="e#1196#1471#0" />
+            <element signature="e#1524#9255#0" />
+            <element signature="e#1734#2388#0" />
+            <element signature="e#2450#4758#0" />
+            <element signature="e#4823#5201#0" />
+            <element signature="e#5302#5988#0" />
+            <element signature="e#9309#21471#0" />
+            <element signature="e#11960#12646#0" />
+            <element signature="e#12708#13992#0" />
+            <element signature="e#14069#14474#0" />
+            <element signature="e#15123#15280#0" />
+            <element signature="e#15264#18536#0" />
+            <element signature="e#21767#21901#0" />
+            <element signature="e#22024#22267#0" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/EdittingVisualization/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="175">
-          <caret line="112" column="33" lean-forward="true" selection-start-line="112" selection-start-column="33" selection-end-line="112" selection-end-column="33" />
+        <state relative-caret-position="330">
+          <caret line="51" column="21" selection-start-line="51" selection-start-column="21" selection-end-line="51" selection-end-column="21" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
-            <element signature="e#220#970#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/EdittingVisualization/Time.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="3" selection-start-line="3" selection-end-line="3" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/EdittingVisualization/Editting.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="471">
-          <caret line="170" selection-start-line="170" selection-end-line="170" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-            <element signature="e#137#484#0" />
-            <element signature="e#1135#1677#0" />
           </folding>
         </state>
       </provider>

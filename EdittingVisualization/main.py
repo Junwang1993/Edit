@@ -49,7 +49,7 @@ length = 1680.0
 width = 1050.0
 fileDirs, fileMarks = getAllFile([1]) # only extract college data
 # iterate all task
-for i_file in range(1, len(fileDirs)):
+for i_file in range(0, len(fileDirs)):
     #print(str(i))
     dir = fileDirs[i_file]
     # get csv file
@@ -133,7 +133,7 @@ for i_file in range(1, len(fileDirs)):
         Visualization.EditingTimeWindowVisualization(at_video, cap, video_index_range, full_gaze_at, full_gaze_data, gaze_index_range, CPM, filename)
     cap.release()
     cv2.destroyAllWindows()
-    break
+
 
 
 
