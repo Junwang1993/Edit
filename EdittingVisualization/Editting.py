@@ -1,5 +1,6 @@
 import numpy as np
 import Time
+import random
 
 def getCursorPosition(at_wanted, ats_cursor, xs_cursor, ys_cursor, length = 1680.0, width = 1050.0):
     # found index need to substract one
@@ -68,8 +69,6 @@ class CaretPositionModule(object):
         if index_c >= len(self.ats_c):
             index_c = len(self.ats_c) - 1
         return index_c
-
-
 
 class WritingPositionModule(object):
     def __init__(self, ats_wp, xs_wp, ys_wp):
@@ -254,7 +253,92 @@ class EditingModule(object):
             f.write('\n')
         f.closed
 
+class NonEditingModule(object):
+    def __init__(self, ats_cursor, xs_cursor, ys_cursor, numExtract, editingAtRanges, deltaT = 3000):
+        self.at_cursor = ats_cursor
+        self.xs_cursor = xs_cursor
+        self.ys_cursor = ys_cursor
+        self.numExtract = numExtract
+        self.editingAtRanges = editingAtRanges
+        self.editingIndexRanges = []
+        self.deltaT = deltaT
+        # process
+        self.preprocessing_convert_atIntervals2indexIntervals()
+        self.preprocessing_build_random_start_index()
+        self.ExtractNonEditingIntervals()
 
+    def preprocessing_convert_atIntervals2indexIntervals(self):
 
+        for i in range(0, len(self.editingAtRanges)):
+            lastFound = 0
+            r = self.editingAtRanges[i]
+            i_f = Time.Time().findPositionInTimeArray(r[0], self.at_cursor, lastFound)-1
+            if i_f<0:
+                i_f = 0
+            if i_f>=len(self.at_cursor)-1:
+                i_f =len(self.at_cursor)-1
+            lastFound = i_f
 
+            i_b = Time.Time().findPositionInTimeArray(r[1], self.at_cursor, lastFound)-1
+            if i_b<0:
+                i_b = 0
+            if i_b>=len(self.at_cursor)-1:
+                i_b =len(self.at_cursor)-1
+            self.editingIndexRanges.append((i_f, i_b))
+
+    def preprocessing_build_random_start_index(self):
+        # build potential start index for non editing
+        occupied_index = []
+        for i in range(0, len(self.editingIndexRanges)):
+            editing_range = self.editingIndexRanges[i]
+            for j in range(editing_range[0], editing_range[1]+1):
+                occupied_index.append(j)
+        nonoccupied_index = []
+        for i in range(0, len(self.at_cursor)):
+            if i not in occupied_index:
+                nonoccupied_index.append(i)
+        self.potentialStartIndex = nonoccupied_index
+
+    def isCovered(self, interval_1, interval_2):
+        range1 = range(interval_1[0], interval_1[1])
+        range2 = range(interval_2[0], interval_2[1])
+        l = list(set(range1) & set(range2))  # to list
+        size = len(l)
+        if size>0:
+            return True
+        else:
+            return False
+
+    def isCoverdByEditingInterval(self, nonEditingInterval):
+        flag = False
+        for i in range(0, len(self.editingIndexRanges)):
+            editingInterval = self.editingIndexRanges[i]
+            if editingInterval[0]>nonEditingInterval[1]:
+                break
+            flag = self.isCovered(editingInterval, nonEditingInterval)
+            if flag == True:
+                break
+        return flag
+
+    def FetechEndIndex(self, startIndex):
+        at_f = self.at_cursor[startIndex]
+        at_b = Time.Time().addByNms(at_f, self.deltaT)
+        endIndex = Time.Time().findPositionInTimeArray(at_b, self.at_cursor)-1
+        return endIndex
+
+    def ExtractNonEditingIntervals(self):
+        selected = []
+        self.nonEditingIntervals = []
+        self.nonEditingTypes = []
+        while len(self.nonEditingIntervals)<self.numExtract:
+            # random pick one
+            startIndex = random.choice(self.potentialStartIndex)
+            endIndex = self.FetechEndIndex(startIndex)
+            while startIndex in selected or self.isCoverdByEditingInterval((startIndex, endIndex)):
+                startIndex = random.choice(self.potentialStartIndex)
+                endIndex = self.FetechEndIndex(startIndex)
+            # update
+            selected.append(startIndex)
+            self.nonEditingIntervals.append((self.at_cursor[startIndex], self.at_cursor[endIndex]))
+            self.nonEditingTypes.append('nonEditing')
 

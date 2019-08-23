@@ -63,7 +63,6 @@ def detectTextArea_english(frame):
     #--------------------------------------
     return boxs
 
-
 def detectTextArea_chinese(frame):
     boxs = []
     gray = cv2.cvtColor(frame[100:980, :], cv2.COLOR_BGR2GRAY)  # grayscale

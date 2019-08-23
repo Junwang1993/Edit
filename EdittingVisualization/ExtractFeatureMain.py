@@ -65,6 +65,7 @@ def fvsToArff(fileName, fvs, lbs, classmark, typeInstances):
         f.write(line)
         f.write('\n')
     f.closed
+
 FVS = []
 LBS = []
 # arg
@@ -129,13 +130,17 @@ for i_file in range(0, len(fileDirs)):
     if len(glob(dir+'*writing*.csv')) ==0:
         continue
     csv5 = CsvReader.CsvReader(glob(dir+'*writing*.csv')[0])
-
     data_wp = csv5.getData([0,1,2], hasHeader=0, needHandleNegativeOneIndex=[], flag=True)
     ats_wp = [Time.Time(at) for at in data_wp[0]]
     xs_wp = [float(at) for at in data_wp[1]]
     ys_wp = [float(at) for at in data_wp[2]]
     WPM = Editting.WritingPositionModule(ats_wp,xs_wp,ys_wp)
     CPM = Editting.CursorPositionModule(ats_cursor, xs_cursor, ys_cursor)
+
+    # csv6 = CsvReader.CsvReader(glob(dir+'*BoxA*.csv')[0])
+    # data_boxApp = csv6.getData([0],hasHeader=0, needHandleNegativeOneIndex=[], flag=True)
+    # boxApp_ats = [Time.Time(at) for at in data_boxApp[0]]
+
     # extracting editing interval
     editingFileName = dir + 'editing_interval.csv'
     editing_file = Path(editingFileName)
@@ -147,12 +152,18 @@ for i_file in range(0, len(fileDirs)):
         EdittingModule.generate2CSV(dir + 'editing_interval.csv')
         editingInterval = EdittingModule.FullEdittingIntervals
         editingType = EdittingModule.editingTypes
+
+
+
+
     # fv file name
     fvfileName = 'C:\\Users\\csjunwang\\Desktop\\EditingResult\\efv.arff'
 
     ##-------------------------------------------------------------
     # all dataare prepared above
     # feature around edit point module
+
+
 
     FAE = FeaturesAroundEditing.FeaturesAheadEditingPointModule(
         ats_gaze = at_gaze,
@@ -169,9 +180,52 @@ for i_file in range(0, len(fileDirs)):
         writingPositionXs = xs_wp,
         writingPositionYs = ys_wp
     )
+
+    # generate non editing interval
+    nonEditing = Editting.NonEditingModule(ats_cursor, xs_cursor, ys_cursor, len(editingInterval), FAE.editingIndexRanges_for_generating_noEditing)
+    FANE = FeaturesAroundEditing.FeaturesAheadEditingPointModule(
+        ats_gaze=at_gaze,
+        xs_gaze=[float(n) * 1680 for n in data_gaze[1]],
+        ys_gaze=[float(n) * 1050 for n in data_gaze[2]],
+        ats_kb=refine_ats_keypresses,
+        keyInfo_kb=refine_keypresses_info,
+        editingAtRange=nonEditing.nonEditingIntervals,
+        editingType=nonEditing.nonEditingTypes,
+        caretATs=ats_cursor,
+        caretXs=xs_cursor,
+        caretYs=ys_cursor,
+        writingPositionATs=ats_wp,
+        writingPositionXs=xs_wp,
+        writingPositionYs=ys_wp,
+        non=True
+    )
+    # GT = FeaturesAroundEditing.GazeTrajectoryAheadEditingPoint(
+    #     ats_gaze=at_gaze,
+    #     xs_gaze=[float(n) * 1680 for n in data_gaze[1]],
+    #     ys_gaze=[float(n) * 1050 for n in data_gaze[2]],
+    #     ats_kb=refine_ats_keypresses,
+    #     keyInfo_kb=refine_keypresses_info,
+    #     editingAtRange=editingInterval,
+    #     editingType=editingType,
+    #     caretATs=ats_cursor,
+    #     caretXs=xs_cursor,
+    #     caretYs=ys_cursor,
+    #     writingPositionATs=ats_wp,
+    #     writingPositionXs=xs_wp,
+    #     writingPositionYs=ys_wp,
+    #     box_shown_ats = boxApp_ats,
+    #     extraction_type = 0
+    # )
+    # GT.plotTrajs(dir+'GTvis\\')
+
+
+
+
     FVS.extend(FAE.fvs)
     LBS.extend(FAE.lbs)
+    FVS.extend(FANE.fvs)
+    LBS.extend(FANE.lbs)
+    
 
-fvsToArff(fvfileName, FVS, LBS, '{d, i}', 'edit')
-
-
+fvsToArff(fvfileName, FVS, LBS, '{Deletion, Insertion, nonEditing}', 'edit')
+FeaturesAroundEditing.fvs2csv(FVS, LBS, FAE.fv_name, 'C:\\Users\\csjunwang\\Desktop\\EditingResult\\fvs.csv')
