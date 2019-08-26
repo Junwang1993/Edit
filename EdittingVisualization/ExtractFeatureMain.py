@@ -9,6 +9,7 @@ import Editting
 import Visualization
 import FeaturesAroundEditing
 from pathlib import Path
+import GazeMovement
 
 # functions
 def getAllFile(age_wanted):
@@ -153,8 +154,19 @@ for i_file in range(0, len(fileDirs)):
         editingInterval = EdittingModule.FullEdittingIntervals
         editingType = EdittingModule.editingTypes
 
+    #-----------------------------------------------------------------------------------
+    editingInterval_f = [tp[0] for tp in editingInterval]
+    GazeMovement.GazeMovementVisualization(
+        gaze_ats = at_gaze,
+        gaze_xs = [float(n)*1680 for n in data_gaze[1]],
+        gaze_ys = [float(n)*1050 for n in data_gaze[2]],
+        editingMoments = editingInterval_f,
+        windowLength = 1000,
+        delta=1000/4
+    )
 
 
+    #----------------------------------------------------------------------------------
 
     # fv file name
     fvfileName = 'C:\\Users\\csjunwang\\Desktop\\EditingResult\\efv.arff'
@@ -225,7 +237,7 @@ for i_file in range(0, len(fileDirs)):
     LBS.extend(FAE.lbs)
     FVS.extend(FANE.fvs)
     LBS.extend(FANE.lbs)
-    
+
 
 fvsToArff(fvfileName, FVS, LBS, '{Deletion, Insertion, nonEditing}', 'edit')
 FeaturesAroundEditing.fvs2csv(FVS, LBS, FAE.fv_name, 'C:\\Users\\csjunwang\\Desktop\\EditingResult\\fvs.csv')

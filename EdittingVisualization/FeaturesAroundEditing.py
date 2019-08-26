@@ -704,6 +704,7 @@ class Trajectory(object):
         # caret place
         self.caretP = (0, 0)
 
+
     def draw(self, edit_type, filename):
         g_start = 176.0
         b_start = 176.0
