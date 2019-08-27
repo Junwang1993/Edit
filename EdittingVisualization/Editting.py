@@ -30,6 +30,18 @@ def readEditingIntervalsCSV(fileName):
             editingType.append(type)
     return editingInterval, editingType
 
+def readNonEditingIntervalsCSV(fileName):
+    editingInterval = []
+    with open(fileName, 'r') as f:
+        for line in f:
+            line_info = line.split(',')
+            interval_f_at = Time.Time(line_info[0])
+            interval_b_at = Time.Time(line_info[1])
+            # append
+            editingInterval.append((interval_f_at, interval_b_at))
+    return editingInterval
+
+
 class CaretPositionModule(object):
     def __init__(self, ats_c, xs_c, ys_c):
         # inner parameter
@@ -342,7 +354,7 @@ class NonEditingModule(object):
             self.nonEditingIntervals.append((self.at_cursor[startIndex], self.at_cursor[endIndex]))
             self.nonEditingTypes.append('nonEditing')
 
-class NonEditingModuelV2(object):
+class NonEditingModuleV2(object):
 
     def RepresentsInt(s):
         try:
@@ -357,6 +369,7 @@ class NonEditingModuelV2(object):
         # holder
         self.nonEditingAtMoments = []
         # preocess
+        self.process()
 
     def process(self):
         # find <SPACE><TAB> point
@@ -379,4 +392,16 @@ class NonEditingModuelV2(object):
             flag = Time.Time().compareTwoTime(at_f, front_at)
             if flag > 0:
                 nonEditingIntervals.append((at_f, at_b))
+        self.nonEditingIntervals = nonEditingIntervals
 
+    def generate2CSV(self, fileName):
+        f = open(fileName, 'w')
+        for i in range(0, len(self.nonEditingIntervals)):
+            interval = self.nonEditingIntervals[i]
+            line = ''
+            line += Time.Time().toString(interval[0])
+            line += ','
+            line += Time.Time().toString(interval[1])
+            f.write(line)
+            f.write('\n')
+        f.closed
