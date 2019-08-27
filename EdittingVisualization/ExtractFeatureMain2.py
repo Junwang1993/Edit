@@ -155,15 +155,15 @@ for i_file in range(0, len(fileDirs)):
         editingType = EdittingModule.editingTypes
 
     #-----------------------------------------------------------------------------------
-    # editingInterval_f = [tp[0] for tp in editingInterval]
-    # GazeMovement.GazeMovementVisualization(
-    #     gaze_ats = at_gaze,
-    #     gaze_xs = [float(n)*1680 for n in data_gaze[1]],
-    #     gaze_ys = [float(n)*1050 for n in data_gaze[2]],
-    #     editingMoments = editingInterval_f,
-    #     windowLength = 500,
-    #     delta=500/5
-    # )
+    editingInterval_f = [tp[0] for tp in editingInterval]
+    GazeMovement.GazeMovementVisualization(
+        gaze_ats = at_gaze,
+        gaze_xs = [float(n)*1680 for n in data_gaze[1]],
+        gaze_ys = [float(n)*1050 for n in data_gaze[2]],
+        editingMoments = editingInterval_f,
+        windowLength = 500,
+        delta=500/5
+    )
     #----------------------------------------------------------------------------------
 
     # fv file name

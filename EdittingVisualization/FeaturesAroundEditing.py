@@ -4,6 +4,7 @@ import numpy as np
 import Editting
 from scipy import stats
 import os.path
+import GazeMovement
 
 import matplotlib #everthing works fine, no backend selected yet
 matplotlib.use("TkAgg") #backend selected, would still be fine even if Tk wasnt installed.
@@ -245,7 +246,7 @@ class FeaturesNearEditingPointModule(object):
 
 class FeaturesAheadEditingPointModule(object):
 
-    def __init__(self, ats_gaze, xs_gaze, ys_gaze, ats_kb, keyInfo_kb, editingAtRange, editingType,caretATs, caretXs, caretYs, writingPositionATs, writingPositionXs, writingPositionYs, non = False, deltaT = 3000):
+    def __init__(self, ats_gaze, xs_gaze, ys_gaze, ats_kb, keyInfo_kb, editingAtRange, editingType,caretATs, caretXs, caretYs, writingPositionATs, writingPositionXs, writingPositionYs, non = False, deltaT = 1500):
         # gaze
         self.ats_gaze = ats_gaze
         self.xs_gaze = xs_gaze
@@ -314,6 +315,12 @@ class FeaturesAheadEditingPointModule(object):
                 b_index_kb = ei.b_full_kb
             )
 
+            self.extractGMFeaturesList(
+                ats_inRange_gaze = self.ats_gaze[ei.f_full_gaze:ei.b_full_gaze],
+                xs_inRange_gaze = self.xs_gaze[ei.f_full_gaze:ei.b_full_gaze],
+                ys_inRange_gaze = self.ys_gaze[ei.f_full_gaze:ei.b_full_gaze]
+            )
+
             fv = []
             self.fv_name = []
 
@@ -323,13 +330,17 @@ class FeaturesAheadEditingPointModule(object):
             fv_text, fv_name_text = self.extractTextFeaturesVector()
             # keyboard
             fv_kbd, fv_name_kbd = self.extractKBDFeaturesVector()
+            #gm
+            fv_gm, fv_name_gm = self.extractGMFeaturesVector()
             # extend
             fv.extend(fv_fix)
             fv.extend(fv_text)
             fv.extend(fv_kbd)
+            fv.extend(fv_gm)
             self.fv_name.extend(fv_name_fix)
             self.fv_name.extend(fv_name_text)
             self.fv_name.extend(fv_name_kbd)
+            self.fv_name.extend(fv_name_gm)
             # append 2 fvs
             self.fvs.append(fv)
             self.lbs.append(self.editingType[i])
@@ -453,6 +464,7 @@ class FeaturesAheadEditingPointModule(object):
                 return True
         else:
             return False
+
     def extractKeyboardDynamicFeaturesList(self, ats_inRange_kb, info_inRange_kb, full_at_kb, full_Info_kb, f_index_kb, b_index_kb):
         # just for initialization
         self.typing_fvl = {
@@ -490,7 +502,11 @@ class FeaturesAheadEditingPointModule(object):
         self.kb_fv = {
             'num_keystrokes' : None,
             'close_stop_character' : None,
-            'close_stop_time': None
+            'close_stop_time': None,
+            # todo
+            'current_box_start_interval': None,
+            'avg_kpi_current_box':None,
+            'last_delete_time':None
         }
 
 
@@ -685,6 +701,25 @@ class FeaturesAheadEditingPointModule(object):
         else:
             fv.append(0)
         return fv, fv_names
+
+    def extractGMFeaturesList(self, ats_inRange_gaze, xs_inRange_gaze, ys_inRange_gaze):
+        GMM = GazeMovement.GMFeatureModule(
+            gaze_ats = ats_inRange_gaze,
+            gaze_xs = xs_inRange_gaze,
+            gaze_ys = ys_inRange_gaze,
+            windowLength = 500,
+            delta = 500/5.0
+        )
+        self.gm_fl = GMM.fd
+
+    def extractGMFeaturesVector(self):
+        fv = []
+        fv_name = []
+        for fvn in self.gm_fl:
+            fv_name.append(fvn)
+            fv.append(self.gm_fl[fvn])
+        return fv, fv_name
+
 
 class Trajectory(object):
 

@@ -342,3 +342,41 @@ class NonEditingModule(object):
             self.nonEditingIntervals.append((self.at_cursor[startIndex], self.at_cursor[endIndex]))
             self.nonEditingTypes.append('nonEditing')
 
+class NonEditingModuelV2(object):
+
+    def RepresentsInt(s):
+        try:
+            int(s)
+            return True
+        except ValueError:
+            return False
+
+    def __init__(self, ats_keypress, info_keypress):
+        self.ats_keypress = ats_keypress
+        self.info_keypress = info_keypress
+        # holder
+        self.nonEditingAtMoments = []
+        # preocess
+
+    def process(self):
+        # find <SPACE><TAB> point
+        # find int point
+        index_check = 0
+        while index_check <= len(self.ats_keypress)-2:
+            # case 1: <SPACE> <TAB> point
+            if self.info_keypress[i] == '<SPACE>' and self.info_keypress[i+1] =='<TAB>':
+                self.nonEditingAtMoments.append(self.ats_keypress[i])
+            # case 2: int
+            if self.RepresentsInt(self.info_keypress[i]):
+                if not(i+1 <= len(self.ats_keypress)-1 and (self.info_keypress[i+1] =='<SPACE>' or self.RepresentsInt(self.info_keypress[i+1]))):
+                    self.nonEditingAtMoments.append(self.ats_keypress[i])
+
+    def Extract_nonEditing_Intervals(self, deltaT, front_at):
+        nonEditingIntervals = []
+        for i in range(0, len(self.nonEditingAtMoments)):
+            at_f = Time.Time().substractByNms(self.nonEditingAtMoments, deltaT)
+            at_b = self.nonEditingAtMoments[i]
+            flag = Time.Time().compareTwoTime(at_f, front_at)
+            if flag > 0:
+                nonEditingIntervals.append((at_f, at_b))
+
