@@ -1,6 +1,7 @@
 import numpy as np
 import Time
 import random
+import math
 
 def getCursorPosition(at_wanted, ats_cursor, xs_cursor, ys_cursor, length = 1680.0, width = 1050.0):
     # found index need to substract one
@@ -356,7 +357,7 @@ class NonEditingModule(object):
 
 class NonEditingModuleV2(object):
 
-    def RepresentsInt(s):
+    def RepresentsInt(self, s):
         try:
             int(s)
             return True
@@ -374,8 +375,8 @@ class NonEditingModuleV2(object):
     def process(self):
         # find <SPACE><TAB> point
         # find int point
-        index_check = 0
-        while index_check <= len(self.ats_keypress)-2:
+        i = 0
+        while i <= len(self.ats_keypress)-2:
             # case 1: <SPACE> <TAB> point
             if self.info_keypress[i] == '<SPACE>' and self.info_keypress[i+1] =='<TAB>':
                 self.nonEditingAtMoments.append(self.ats_keypress[i])
@@ -383,16 +384,19 @@ class NonEditingModuleV2(object):
             if self.RepresentsInt(self.info_keypress[i]):
                 if not(i+1 <= len(self.ats_keypress)-1 and (self.info_keypress[i+1] =='<SPACE>' or self.RepresentsInt(self.info_keypress[i+1]))):
                     self.nonEditingAtMoments.append(self.ats_keypress[i])
-
+            i += 1
     def Extract_nonEditing_Intervals(self, deltaT, front_at):
         nonEditingIntervals = []
+        nonEditingTypes= []
         for i in range(0, len(self.nonEditingAtMoments)):
-            at_f = Time.Time().substractByNms(self.nonEditingAtMoments, deltaT)
+            at_f = Time.Time().substractByNms(self.nonEditingAtMoments[i], deltaT)
             at_b = self.nonEditingAtMoments[i]
             flag = Time.Time().compareTwoTime(at_f, front_at)
             if flag > 0:
                 nonEditingIntervals.append((at_f, at_b))
+                nonEditingTypes.append('nonEditing')
         self.nonEditingIntervals = nonEditingIntervals
+        self.nonEditingTypes = nonEditingTypes
 
     def generate2CSV(self, fileName):
         f = open(fileName, 'w')
@@ -405,3 +409,188 @@ class NonEditingModuleV2(object):
             f.write(line)
             f.write('\n')
         f.closed
+
+
+class SentenceEffortModule(object):
+    def __init__(self, cursor_ats, cursor_xs,  cursor_ys, kb_ats, kb_info):
+        self.cursor_ats = cursor_ats
+        self.cursor_xs = cursor_xs
+        self.cursor_ys = cursor_ys
+        self.kb_ats = kb_ats
+        self.kb_info = kb_info
+        # mean holder
+        self.durations = []
+        self.lengths = []
+        self.lengthGrowths = []
+        self.numBoxs = []
+        self.lengthPreBoxs = []
+        # last found index
+        self.lastFound_clause_length = 0
+        # extract clause intervals
+        self.extractClauseInterval()
+        self.estimateEffort()
+
+    def checkIsStopCharacters(self, full_info_kb, checkIndex):
+        # capture all the stop characters
+        stop_characters = {
+            '<',  # ,
+            '</?>',  # ?
+            '<.>>',  # .
+        }
+        half_stop_characters = {
+            '1'  # !
+        }
+        checkC =  full_info_kb[checkIndex]
+        if checkC in stop_characters:
+            return True
+        elif checkC in half_stop_characters:
+            # check one character before
+            if checkIndex == 0:
+                return False
+            if full_info_kb[checkIndex-1] == '<LSHIFT>' or full_info_kb[checkIndex-1] == '<RSHIFT>':
+                return True
+        else:
+            return False
+
+    def checkIsEndOfLastBox(self, full_info_kb, checkIndex):
+        # case 1
+        if checkIndex >= 1 and full_info_kb[checkIndex] == '<TAB>':
+            if full_info_kb[checkIndex-1] == '<SPACE>':
+                return True
+        # case 2
+        if self.RepresentsInt((full_info_kb[checkIndex])):
+            flag1 = checkIndex+1>len(full_info_kb) or self.RepresentsInt(full_info_kb[checkIndex+1])
+            flag2 = checkIndex+1>len(full_info_kb) or full_info_kb[checkIndex+1] == '<<SPACE>>'
+            if flag1 == False and flag2 == False:
+                return True
+        return False
+
+    def RepresentsInt(self, s):
+        try:
+            int(s)
+            return True
+        except ValueError:
+            return False
+
+    def extractClauseInterval(self):
+        # find index of stop point
+        indexs = [-1] # initialize with -1 inside
+        for i in range(0, len(self.kb_ats)):
+            flag = self.checkIsStopCharacters(self.kb_info, i)
+            if flag == True:
+                indexs.append(i)
+        self.clauseAtIntervals = []
+        self.clauseIndexIntervals = []
+        for i in range(0, len(indexs)-2):
+            at_interval = (self.kb_ats[indexs[i]+1], self.kb_ats[indexs[i+1]+1])
+            index_interval = (indexs[i]+1, indexs[i+1]+1)
+            self.clauseAtIntervals.append(at_interval)
+            self.clauseIndexIntervals.append(index_interval)
+
+    def countBoxs(self,index_interval):
+        index_f = index_interval[0]
+        index_b = index_interval[1]
+        sub_info = self.kb_info[index_f:index_b]
+        # count the number of boxs
+        count_box = 0
+        for i in range(0, len(sub_info)):
+            flag = self.checkIsEndOfLastBox(self.kb_info, i)
+            if flag == True:
+                count_box += 1
+        return  count_box
+
+    def getOneLineDistance(self, dx, dy):
+        lineLength = 0.44 * 1680
+        lineHight = 105.0
+        half_lineHeight = 105.0 / 2.0
+        numHalfLine = math.ceil(abs(dy) / half_lineHeight)
+        lineNum = math.floor((numHalfLine - 1) / 2.0)
+        d = (lineNum * lineLength) - abs(dx)
+        return d
+
+    def getClauseLength(self, at_interval):
+        at_f = at_interval[0]
+        at_b = at_interval[1]
+        idx_cursor_f = Time.Time().findPositionInTimeArray(at_f, self.cursor_ats)-1
+        self.lastFound_clause_length = idx_cursor_f
+        idx_cursor_b = Time.Time().findPositionInTimeArray(at_b, self.cursor_ats, self.lastFound_clause_length)-1
+        self.lastFound_clause_length = idx_cursor_b
+        # compute length
+        dx = self.cursor_xs[idx_cursor_b] - self.cursor_ys[idx_cursor_f]
+        dy = self.cursor_ys[idx_cursor_b] - self.cursor_ys[idx_cursor_f]
+        clause_length = self.getOneLineDistance(dx, dy)
+        return clause_length
+
+    def getDurationOfClasue(self, at_interval):
+        return Time.Time().substractionBetweenTwoTime(at_interval[0], at_interval[1])
+
+    def estimateEffort(self):
+        self.efforts = []
+        # iterate
+        for i in range(0, len(self.clauseIndexIntervals)):
+            at_interval = self.clauseAtIntervals[i]
+            kb_index_interval = self.clauseIndexIntervals[i]
+            # compute property
+            box_c = self.countBoxs(kb_index_interval)
+            if box_c==0:
+                continue
+            dur = self.getDurationOfClasue(at_interval)
+            l = abs(self.getClauseLength(at_interval))
+            # initilize effort
+            effort  = Effort(
+                duration = dur,
+                lenght = l,
+                lengthGrowth = float(l) / float(dur),
+                numberBox = box_c,
+                lengthPreBox = float(l) / float(box_c),
+                sequenceTyping = self.kb_info[kb_index_interval[0]:kb_index_interval[1]]
+            )
+            self.durations.append(dur)
+            self.lengths.append(l)
+            self.lengthGrowths.append(float(l) / float(dur))
+            self.numBoxs.append(box_c)
+            self.lengthPreBoxs.append(float(l) / float(box_c))
+
+            self.efforts.append(effort)
+
+    def Print2Console(self):
+
+        for i in range(0, len(self.efforts)):
+            e = self.efforts[i]
+            print(str(i+1)+'th clause:')
+            e.toConsole()
+        print('------------------------------------------------------------------')
+        print('mean dur:'+str(np.mean(np.array(self.durations))))
+        print('mean length:' + str(np.mean(np.array(self.lengths))))
+        print('mean lengthGrowth:' + str(np.mean(np.array(self.lengthGrowths))))
+        print('mean numBox:' + str(np.mean(np.array(self.numBoxs))))
+        print('mean lengthPreBox:' + str(np.mean(np.array(self.lengthPreBoxs))))
+
+class Effort(object):
+
+    def __init__(self, duration, lenght, lengthGrowth, numberBox, lengthPreBox, sequenceTyping):
+        self.duration = duration
+        self.length = lenght
+        self.lengthGrowth = lengthGrowth
+        self.numberBox = numberBox
+        self.lengthPreBox = lengthPreBox
+        self.sequenceTyping = sequenceTyping
+    def toConsole(self):
+        print('-------------------------------')
+        print(str(self.sequenceTyping))
+        print('-------------------------------')
+        print('Duration: '+str(self.duration))
+        print('Length: '+str(self.length))
+        print('LengthGrowth: '+str(self.lengthGrowth))
+        print('Num. box: '+str(self.numberBox))
+        print('LenghtPreBox: ' +str(self.lengthPreBox))
+        print('-------------------------------')
+
+
+
+
+
+
+
+
+

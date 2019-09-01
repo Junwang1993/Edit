@@ -315,11 +315,11 @@ class FeaturesAheadEditingPointModule(object):
                 b_index_kb = ei.b_full_kb
             )
 
-            self.extractGMFeaturesList(
-                ats_inRange_gaze = self.ats_gaze[ei.f_full_gaze:ei.b_full_gaze],
-                xs_inRange_gaze = self.xs_gaze[ei.f_full_gaze:ei.b_full_gaze],
-                ys_inRange_gaze = self.ys_gaze[ei.f_full_gaze:ei.b_full_gaze]
-            )
+            # self.extractGMFeaturesList(
+            #     ats_inRange_gaze = self.ats_gaze[ei.f_full_gaze:ei.b_full_gaze],
+            #     xs_inRange_gaze = self.xs_gaze[ei.f_full_gaze:ei.b_full_gaze],
+            #     ys_inRange_gaze = self.ys_gaze[ei.f_full_gaze:ei.b_full_gaze]
+            # )
 
             fv = []
             self.fv_name = []
@@ -331,16 +331,16 @@ class FeaturesAheadEditingPointModule(object):
             # keyboard
             fv_kbd, fv_name_kbd = self.extractKBDFeaturesVector()
             #gm
-            fv_gm, fv_name_gm = self.extractGMFeaturesVector()
+            #fv_gm, fv_name_gm = self.extractGMFeaturesVector()
             # extend
             fv.extend(fv_fix)
             fv.extend(fv_text)
             fv.extend(fv_kbd)
-            fv.extend(fv_gm)
+            #fv.extend(fv_gm)
             self.fv_name.extend(fv_name_fix)
             self.fv_name.extend(fv_name_text)
             self.fv_name.extend(fv_name_kbd)
-            self.fv_name.extend(fv_name_gm)
+            #self.fv_name.extend(fv_name_gm)
             # append 2 fvs
             self.fvs.append(fv)
             self.lbs.append(self.editingType[i])
@@ -443,6 +443,36 @@ class FeaturesAheadEditingPointModule(object):
             self.editingIndexRange.append(ei)
             self.editingIndexRanges_for_generating_noEditing.append((at_f, at_b))
 
+    def checkIsDelete(self, full_info_kb, checkIndex):
+        if full_info_kb[checkIndex] == '<BACKSPACE>':
+            return True
+        else:
+            return False
+
+
+    def checkIsEndOfLastBox(self, full_info_kb, checkIndex):
+        # case 1
+        if checkIndex >= 1 and full_info_kb[checkIndex] == '<TAB>':
+            if full_info_kb[checkIndex-1] == '<SPACE>':
+                return True
+        # case 2
+        if self.RepresentsInt((full_info_kb[checkIndex])):
+            flag1 = checkIndex+1>len(full_info_kb) or self.RepresentsInt(full_info_kb[checkIndex+1])
+            flag2 = checkIndex+1>len(full_info_kb) or full_info_kb[checkIndex+1] == '<<SPACE>>'
+            if flag1 == False and flag2 == False:
+                return True
+        return False
+
+
+    def RepresentsInt(self, s):
+        try:
+            int(s)
+            return True
+        except ValueError:
+            return False
+
+
+
     def checkIsStopCharacters(self, full_info_kb, checkIndex):
         # capture all the stop characters
         stop_characters = {
@@ -503,10 +533,12 @@ class FeaturesAheadEditingPointModule(object):
             'num_keystrokes' : None,
             'close_stop_character' : None,
             'close_stop_time': None,
-            # todo
+
+            'close_end_lastBox': None,
             'current_box_start_interval': None,
             'avg_kpi_current_box':None,
-            'last_delete_time':None
+            'last_delete_time':None,
+            'last_delete':None
         }
 
 
@@ -533,10 +565,55 @@ class FeaturesAheadEditingPointModule(object):
                 full_at_kb[start_check_reverse]
             )
 
+
+        # find close last end
+        numCheck_lastEnd = 0
+        found_closest_last_end = False
+        reverse_i = start_check_reverse-1
+        while reverse_i >= 0:
+            # if full_Info_kb[reverse_i] in stop_characters:
+            if self.checkIsEndOfLastBox(full_Info_kb, reverse_i):
+                found_closest_last_end = True
+                break
+            numCheck_lastEnd += 1
+            reverse_i -= 1
+        if found_closest_last_end == True:
+            self.kb_fv['close_end_lastBox'] = numCheck_lastEnd
+            self.kb_fv['current_box_start_interval'] = Time.Time().substractionBetweenTwoTime(full_at_kb[reverse_i+1],
+                                                                                          full_at_kb[start_check_reverse])
+            dt = Time.Time().substractionBetweenTwoTime(full_at_kb[reverse_i+1], full_at_kb[start_check_reverse])
+            numTypes = start_check_reverse - reverse_i
+            self.kb_fv['avg_kpi_current_box'] = dt/numTypes
+        else:
+            self.kb_fv['close_end_lastBox'] = -1
+            self.kb_fv['current_box_start_interval'] = -1
+            self.kb_fv['avg_kpi_current_box'] = -1
+
+        #find close last delet
+
+        numCheck_lastDel = 0
+        found_closest_last_del = False
+        reverse_i = start_check_reverse
+        while reverse_i >= 0:
+            # if full_Info_kb[reverse_i] in stop_characters:
+            if self.checkIsDelete(full_Info_kb, reverse_i):
+                found_closest_last_del = True
+                break
+            numCheck_lastDel += 1
+            reverse_i -= 1
+        if found_closest_last_del == True:
+            self.kb_fv['last_delete'] = numCheck_lastDel
+            self.kb_fv['last_delete_time'] = Time.Time().substractionBetweenTwoTime(full_at_kb[reverse_i],
+                                                                                  full_at_kb[start_check_reverse])
+        else:
+            self.kb_fv['last_delete'] = -1
+            self.kb_fv['last_delete_time'] = -1
+
         # refine
         for name in self.kb_fv:
             if self.kb_fv[name] == None:
                 self.kb_fv[name] = -1
+
 
     def extractTextFeaturesVector(self):
         fv = []
@@ -570,6 +647,8 @@ class FeaturesAheadEditingPointModule(object):
             fixation_at = ats_inRange_gaze[f_f_i]
             fixation_x = np.array(xs_inRange_gaze[f_f_i:f_b_i]).mean()
             fixation_y = np.array(ys_inRange_gaze[f_f_i:f_b_i]).mean()
+            if fixation_x <= 0 or fixation_y<=0:
+                continue
             # get current caret position
             caretP = Editting.getCursorPosition(fixation_at, self.caretATs, self.caretXs, self.caretYs)
             # fixation duration
@@ -719,6 +798,80 @@ class FeaturesAheadEditingPointModule(object):
             fv_name.append(fvn)
             fv.append(self.gm_fl[fvn])
         return fv, fv_name
+
+    def extractPotentialBoxFeatures(self):
+
+
+
+
+
+class PotentialBoxFeaturesModule:
+    def __init__(self, ats_gaze, xs_gaze, ys_gaze, full_kb_ats, full_kb_infos, index_box_appear, ats_box_appear, index_box_disappear, ats_box_disapper, check_at_point):
+        # gaze info
+        self.ats_gaze = ats_gaze
+        self.xs_gaze = xs_gaze
+        self.ys_gaze = ys_gaze
+        # keyboard info
+        self.full_kb_ats = full_kb_ats
+        self.full_kb_infos = full_kb_infos
+        # potential candidate box
+        self.index_box_appear = index_box_appear
+        self.ats_box_appear = ats_box_appear
+        self.index_box_disappear = index_box_disappear
+        self.ats_box_disappear = ats_box_disapper
+        # point of editing
+        self.check_at_point = check_at_point # point that editing start
+
+    def process(self):
+        # find last end box interval
+        self.preprocess_find_last_typing_candidate_box_interval()
+        # count number keypress
+        numType = len(self.keypresses_lastBoxs)
+
+    def preprocess_extract_fixations(self):
+        # gaze interval xs and ys
+        gaze_ats_inrange = self.ats_gaze[self.gaze_interval_start_idx:self.gaze_interval_end_idx]
+        gaze_rts_inrange = Time.Time().generateRelativeTimeListFromAbsolut(gaze_ats_inrange)
+        gaze_xs_inrange = self.xs_gaze[self.gaze_interval_start_idx:self.gaze_interval_end_idx]
+        gaze_ys_inrange = self.ys_gaze[self.gaze_interval_start_idx:self.gaze_interval_end_idx]
+        # extract interaction
+        _, _, EfixTuple_index = FixationDetection.fixation_IDT_V2(gaze_xs_inrange, gaze_ys_inrange, rts_inRange_gaze)
+        # holder
+        self.fixation_inrange = []
+        # iterate fixations
+        for i in range(0, len(EfixTuple_index)):
+            f_f_i = EfixTuple_index[i][0]
+            f_b_i = EfixTuple_index[i][1] + 1
+            fixation_at = gaze_ats_inrange[f_f_i]
+            fixation_x = np.array(gaze_xs_inrange[f_f_i:f_b_i]).mean()
+            fixation_y = np.array(gaze_ys_inrange[f_f_i:f_b_i]).mean()
+            if fixation_x <= 0 or fixation_y <= 0:
+                continue
+            self.fixation_inrange.append((fixation_at, fixation_x, fixation_y))
+
+
+    def preprocess_find_last_typing_candidate_box_interval(self):
+        idx_last_box_end_BoxAt = Time.Time().findPositionInTimeArray(self.check_at_point, self.ats_box_disappear)-1
+        self.last_box_end_at = self.ats_box_disappear[idx_last_box_end_BoxAt]
+        self.last_box_start_at = self.ats_box_appear[idx_last_box_end_BoxAt]
+        # extract keypresses in the last box
+        lastFound = 0
+        f_i_kb = Time.Time().findPositionInTimeArray(self.last_box_start_at, self.full_kb_ats, lastFound)-1
+        lastFound = f_i_kb
+        b_i_kb = Time.Time().findPositionInTimeArray(self.last_box_end_at, self.full_kb_ats, lastFound)-1
+        self.keypresses_lastBoxs = self.full_kb_infos[f_i_kb:b_i_kb+1]
+        # extract gaze movement
+        lastFound = 0
+        self.gaze_interval_start_idx = Time.Time().findPositionInTimeArray(self.last_box_start_at, self.ats_gaze, lastFound)
+        lastFound = self.gaze_interval_start_idx
+        self.gaze_interval_end_idx = Time.Time().findPositionInTimeArray(self.last_box_end_at, self.ats_gaze, lastFound)
+
+
+
+
+
+
+
 
 
 class Trajectory(object):
@@ -961,5 +1114,4 @@ class StatisticalOverallOfEditing(object):
             line += '\n'
             f.write(line)
         f.close()
-
 
