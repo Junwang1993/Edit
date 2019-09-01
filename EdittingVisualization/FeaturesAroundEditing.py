@@ -314,6 +314,11 @@ class FeaturesAheadEditingPointModule(object):
                 f_index_kb = ei.f_full_kb,
                 b_index_kb = ei.b_full_kb
             )
+            self.extractPotentialBoxFeaturesList(
+                parametersDict={
+                    #todo
+                }
+            )
 
             # self.extractGMFeaturesList(
             #     ats_inRange_gaze = self.ats_gaze[ei.f_full_gaze:ei.b_full_gaze],
@@ -799,14 +804,41 @@ class FeaturesAheadEditingPointModule(object):
             fv.append(self.gm_fl[fvn])
         return fv, fv_name
 
-    def extractPotentialBoxFeatures(self):
+    def extractPotentialBoxFeaturesList(self, parametersDict):
 
+        PBF = PotentialBoxFeaturesModule(
+            ats_gaze = parametersDict['ats_gaze'],
+            xs_gaze= parametersDict['xs_gaze'],
+            ys_gaze= parametersDict['ys_gaze'],
+            full_kb_ats= parametersDict['full_kb_ats'],
+            full_kb_infos= parametersDict['full_kb_infos'],
+            index_box_appear= parametersDict['index_box_appear'],
+            ats_box_appear= parametersDict['ats_box_appear'],
+            index_box_disappear= parametersDict['index_box_disappear'],
+            ats_box_disapper= parametersDict['ats_box_disapper'],
+            check_at_point= parametersDict['check_at_point'],
+            ats_cursor= parametersDict['ats_cursor'],
+            xs_cursor= parametersDict['xs_cursor'],
+            ys_cursor= parametersDict['ys_cursor'],
+            numType_thres= parametersDict['numType_thres']
+        )
+        self.bf = PBF.fd
 
-
+    def extractPBFeaturesVector(self):
+        fv = []
+        fv_name = []
+        for fvn in self.bf:
+            fv_name.append(fvn)
+            fv.append(self.bf[fvn])
+        return fv, fv_name
 
 
 class PotentialBoxFeaturesModule:
-    def __init__(self, ats_gaze, xs_gaze, ys_gaze, full_kb_ats, full_kb_infos, index_box_appear, ats_box_appear, index_box_disappear, ats_box_disapper, check_at_point):
+    def __init__(self, ats_gaze, xs_gaze, ys_gaze, full_kb_ats, full_kb_infos, index_box_appear, ats_box_appear, index_box_disappear, ats_box_disapper, check_at_point,
+                 ats_cursor,
+                 xs_cursor,
+                 ys_cursor,
+                 numType_thres):
         # gaze info
         self.ats_gaze = ats_gaze
         self.xs_gaze = xs_gaze
@@ -814,6 +846,12 @@ class PotentialBoxFeaturesModule:
         # keyboard info
         self.full_kb_ats = full_kb_ats
         self.full_kb_infos = full_kb_infos
+        # cursor info
+        self.ats_cursor = ats_cursor
+        self.xs_cursor = xs_cursor
+        self.ys_cursor = ys_cursor
+        # thres
+        self.numType_thres = numType_thres
         # potential candidate box
         self.index_box_appear = index_box_appear
         self.ats_box_appear = ats_box_appear
@@ -821,12 +859,66 @@ class PotentialBoxFeaturesModule:
         self.ats_box_disappear = ats_box_disapper
         # point of editing
         self.check_at_point = check_at_point # point that editing start
+        self.process_generateFeatures()
+
+    def process_generateFeatures(self):
+        fd = {
+            'type' : None,  # type 0 is less number &&& types 1
+            'typingInterval_0': -1,
+            'typingInterval_1': -1,
+            'numberFixation': -1,
+            'PercentageFixationsInBox':-1,
+            'fixationDuration': -1,
+            'fixationSpreadX': -1
+        }
+
+        if self.numType <= self.numType_thres:
+            fd['type'] = 0
+            fd['typingInterval_0'] = Time.Time().substractionBetweenTwoTime(self.last_box_start_at, self.last_box_end_at)
+        else:
+            fd['type']  =1
+            fd['typingInterval_1'] = Time.Time().substractionBetweenTwoTime(self.last_box_start_at, self.last_box_end_at)
+            fd['numberFixation'] = len(self.fixation_inrange)
+            fd['PercentageFixationsInBox'] = float(self.fixationInBoxs.count(True))/float(len(self.fixationInBoxs))
+            allDurs = []
+            allXs = []
+            for i in range(0, len(self.fixation_inrange)):
+                fix = self.fixation_inrange[i]
+                allDurs.append(fix[0])
+                if  self.fixationInBoxs[i] == True:
+                    allXs.append(fix[1])
+            fd['fixationDuration'] = np.mean(np.array(allDurs))
+            fd['fixationSpreadX'] = abs(max(allXs)- min(allXs))
+        self.fd = fd
 
     def process(self):
         # find last end box interval
         self.preprocess_find_last_typing_candidate_box_interval()
         # count number keypress
-        numType = len(self.keypresses_lastBoxs)
+        self.numType = len(self.keypresses_lastBoxs)
+        # extract fixation
+        self.preprocess_extract_fixations()
+        # get current cursor position
+        current_cursor_idx = Time.Time().findPositionInTimeArray(self.check_at_point, self.ats_cursor)
+        self.current_cursor = (self.xs_cursor[current_cursor_idx], self.ys_cursor[current_cursor_idx])
+        # in box flags
+        self.fixationInBoxs = []
+        for fix in self.fixation_inrange:
+            fix_x = fix[1]
+            fix_y = fix[2]
+            flag = self.isInCandidateBoxArea((fix_x,fix_y), self.current_cursor, 100,100)
+            self.fixationInBoxs.append(flag)
+
+
+
+    def isInCandidateBoxArea(self, checkP, cursorP, dx, dy):
+        #
+        flag = False
+        if checkP[0] >= cursorP[0] and checkP[0] <= cursorP[0]+dx:
+            if checkP[1]>=cursorP[1] and checkP[1]<=cursorP[1]+dy:
+                flag = True
+        return flag
+
 
     def preprocess_extract_fixations(self):
         # gaze interval xs and ys
@@ -865,13 +957,6 @@ class PotentialBoxFeaturesModule:
         self.gaze_interval_start_idx = Time.Time().findPositionInTimeArray(self.last_box_start_at, self.ats_gaze, lastFound)
         lastFound = self.gaze_interval_start_idx
         self.gaze_interval_end_idx = Time.Time().findPositionInTimeArray(self.last_box_end_at, self.ats_gaze, lastFound)
-
-
-
-
-
-
-
 
 
 class Trajectory(object):
